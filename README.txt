@@ -40,6 +40,7 @@ For full documentation and examples, visit the DataTables jQuery plugin page:
 * Select DataTables as the view style.
 
 -- Configuration --
+
 * A basic DataTables configuration will use the rendered HTML as a datasource.
   This means that in most cases you will want to select all rows needed in
   Views and configure the pagination within the DataTables style settings.
@@ -47,15 +48,44 @@ For full documentation and examples, visit the DataTables jQuery plugin page:
     - Set Views Pager to show all 100 rows;
     - Set DataTables style plugin setting 'Default Page Length' in the fieldset
       PAGINATION AND PAGE LENGTH to 25.
+
 * DataTables also allows for columns to be either visible, hidden or expandable.
   You can select these options under the fieldset HIDDEN AND EXPANDABLE COLUMNS.
+
 * A new fieldset DEFER LOADING OF ADDITIONAL RECORDS has been added, this
   setting takes advantage of DataTables deferLoading, deferRender and ajax
   options by only rendering HTML for rows up to 'Default Page Length'. The rest
   of the rows will be made available over ajax - greatly reducing page weight
   and memory usage.
 
+-- Extensions --
 
+* Currently only Responsive, Select and Buttons are implemented, to keep in line
+  with the previous module capabilities.
 
+* To enable any or all of the three available extensions, you need to download
+  either the regular or bootstrap versions of both CSS and JS files.
 
+* First you need to create a folder called "extensions" in the same place you
+  put the datatables folder, so it will look like this:
+    datatables/media/js/jquery.dataTables.js
+    datatables/extensions
 
+* Then for you place each extension into a subfolder of extension, named after
+  the extension itself:
+    datatables/extensions/responsive/
+    datatables/extensions/responsive/dataTables.responsive.min.js
+    datatables/extensions/responsive/responsive.bootstrap.min.css
+
+* Bootstrap is different to extensions and as such should be placed in
+  a bootstrap subfolder:
+    datatables/media/js/jquery.dataTables.js
+    datatables/bootstrap
+    datatables/bootstrap/dataTables.bootstrap.min.js
+    datatables/bootstrap/dataTables.bootstrap.min.css
+
+-- Notes --
+
+* Awaiting development:
+    - CDN Sourced files and Datatables own bundling.
+    - Minified DataTables JS, currently only the full file.
