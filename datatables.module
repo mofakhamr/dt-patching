@@ -574,7 +574,7 @@ function template_preprocess_datatables_view(&$vars) {
               'excel',
               'pdf'
             );
-            if($datatable_options['dom']) {
+            if($datatable_options['dom'] && strpos($datatable_options['dom'], 'B') === FALSE) {
               $datatable_options['dom'] = 'B' . $datatable_options['dom'];
             }
           }
