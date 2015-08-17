@@ -28,7 +28,7 @@
   </thead>
   <tbody>
     <?php foreach ($rows as $count => $row): ?>
-      <tr class="<?php print implode(' ', $row_classes[$count]); ?>">
+      <tr class="views-row <?php print implode(' ', $row_classes[$count]); ?>">
         <?php foreach ($row as $field => $content): ?>
           <td class="views-field views-field-<?php print $fields[$field]; ?>">
             <?php print $content; ?>

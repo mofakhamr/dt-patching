@@ -11,9 +11,9 @@ files[] = views/datatables-view.tpl.php
 files[] = views/datatables.views.inc
 files[] = views/datatables_style_plugin.inc
 
-; Information added by Drupal.org packaging script on 2014-10-13
-version = "7.x-1.2+9-dev"
+; Information added by Drupal.org packaging script on 2014-10-18
+version = "7.x-2.x-dev"
 core = "7.x"
 project = "datatables"
-datestamp = "1413217681"
+datestamp = "1413666752"
 

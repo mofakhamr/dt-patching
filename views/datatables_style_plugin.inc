@@ -43,6 +43,10 @@ class datatables_style_plugin extends views_plugin_style_table {
     $options['hidden_columns'] = array(
       'default' => array(),
     );
+    $options['defer_load'] = array(
+      'default' => array(),
+    );
+
     return $options;
   }
 
@@ -176,5 +180,57 @@ class datatables_style_plugin extends views_plugin_style_table {
         ),
       );
     }
+
+    if (_datatables_is_new_version())  {
+      // Advanced settings for 1.10.
+      $form['advanced'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Advanced'),
+        '#description' => t('Datatables has many options, some which conflict with Views functionality. Depending on your needs, some of these options'
+          . ' may benefit your specific use case.'
+        ),
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+      );
+      // Ajax sourced rather than DOM sourced.
+      $form['advanced']['json_source_enabled'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('ajax and deferRender'),
+        '#description' => t('Instead of printing the entire HTML from View - create a JSON file to use as the data source (datatables:ajax:url).'
+          . ' The file name is based on your result set, so different views filters applied will create a new file.'
+          . ' This is best used when you set View pager to 0 and use Views caching (which will prevent the large query operation and file creation).'),
+        '#default_value' => isset($this->options['advanced']['json_source_enabled']) ? $this->options['advanced']['json_source_enabled'] : 0,
+      );
+      // Defer Loading / serverSide hacked.
+      $form['advanced']['defer_loading_enabled'] = array(
+        '#type' => 'checkbox',
+        '#attributes' => array('readonly' => 'readonly', 'disabled' => 'disabled'),
+        '#title' => t('deferLoading and serverSide'),
+        '#description' => t("Using DataTables deferLoading requires serverSide, this causes us some problems as we're not using Views for serverSide."
+          . " Instead we use the datatable API to return the requested results from our JSON file which has the full record set."
+          . " This is not ready for release yet... Feel free to contribute!"),
+        '#default_value' => isset($this->options['advanced']['defer_loading_enabled']) ? $this->options['advanced']['defer_loading_enabled'] : 0,
+      );
+      // Bootstrap.
+      $form['advanced']['bootstrap'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Bootstrap Integration'),
+        '#description' => t("You must download the Bootstrap integration files from https://cdn.datatables.net/ and place them in a 'bootstrap/' sub folder in "
+          . "your Datatables folder."),
+        '#default_value' => isset($this->options['advanced']['bootstrap']) ? $this->options['advanced']['bootstrap'] : 0,
+      );
+      // Responsive.
+      $form['advanced']['responsive'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Responsive Extension Integration'),
+        '#description' => t("You must download the Responsive integration files from https://cdn.datatables.net/ and place them in a 'responsive/' sub folder in "
+          . "your Datatables folder."),
+        '#default_value' => isset($this->options['advanced']['responsive']) ? $this->options['advanced']['responsive'] : 0,
+      );
+      // Auto-detection from : http://www.datatables.net/download/index
+      // @TODO Is this possible? cant use bootstrap for sure.
+
+    }
+
   }
 }

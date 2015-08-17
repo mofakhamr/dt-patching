@@ -12,7 +12,7 @@ For full documentation and examples, visit the DataTables jQuery plugin page:
 * Copy the datatables module to sites/all/modules directory.
 
 * Download the latest DataTables jQuery plugin 1.9 package from:
-    http://datatables.net/releases/DataTables-1.9.3.zip
+    http://datatables.net/download/
 
 * Extract the archive and move the dataTables-1.9/media folder to the 
   sub-directory called dataTables in the datatables folder:
@@ -38,3 +38,24 @@ For full documentation and examples, visit the DataTables jQuery plugin page:
 * Add fields to show in the table.
 
 * Select DataTables as the view style.
+
+-- Configuration --
+* A basic DataTables configuration will use the rendered HTML as a datasource.
+  This means that in most cases you will want to select all rows needed in
+  Views and configure the pagination within the DataTables style settings.
+  For example: You have 100 rows, you want to display 25 items per page.
+    - Set Views Pager to show all 100 rows;
+    - Set DataTables style plugin setting 'Default Page Length' in the fieldset
+      PAGINATION AND PAGE LENGTH to 25.
+* DataTables also allows for columns to be either visible, hidden or expandable.
+  You can select these options under the fieldset HIDDEN AND EXPANDABLE COLUMNS.
+* A new fieldset DEFER LOADING OF ADDITIONAL RECORDS has been added, this
+  setting takes advantage of DataTables deferLoading, deferRender and ajax
+  options by only rendering HTML for rows up to 'Default Page Length'. The rest
+  of the rows will be made available over ajax - greatly reducing page weight
+  and memory usage.
+
+
+
+
+
