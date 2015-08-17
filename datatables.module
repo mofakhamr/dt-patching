@@ -48,62 +48,108 @@ function datatables_library() {
       ),
     );
 
-    $tt_sub = _datatables_is_new_version()  ? '/tabletools' : '/extras/TableTools/media';
-    $libraries['datatables-tabletools'] = array(
-      'title' => 'Tabletools plugin for DataTables',
-      'website' => 'http://www.datatables.net/extras/tabletools/',
-      'version' => '1.1.4',
-      'js' => array(
-        $lib_path . $tt_sub . '/extras/TableTools/media/js/TableTools.js' => array(),
-        $lib_path . $tt_sub . '/js/ZeroClipboard.js' => array(),
-      ),
-      'css' => array(
-        $lib_path . $tt_sub . '/extras/TableTools/media/css/TableTools.css' => array(),
-      ),
-      'dependencies' => array(
-        array('datatables', 'datatables'),
-      ),
-    );
-    // New version does not use clipboard or CSS.
-    if (_datatables_is_new_version())  {
-      // @todo missing files, time for auto-detection of distro downloads.
-      $libraries['datatables-tabletools']['css'] = array();
-      $libraries['datatables-tabletools']['js'] = array(
-        $lib_path . $tt_sub . '/dataTables.tableTools.js' => array(),
+    // Do not create library definition if not applicable to version.
+    if (!_datatables_is_new_version()) {
+      $tt_sub = _datatables_is_new_version() ? '/tabletools' : '/extras/TableTools/media';
+      $libraries['datatables-tabletools'] = array(
+        'title' => 'Tabletools plugin for DataTables',
+        'website' => 'http://www.datatables.net/extras/tabletools/',
+        'version' => '1.1.4',
+        'js' => array(
+          $lib_path . $tt_sub . '/extras/TableTools/media/js/TableTools.js' => array(),
+          $lib_path . $tt_sub . '/js/ZeroClipboard.js' => array(),
+        ),
+        'css' => array(
+          $lib_path . $tt_sub . '/extras/TableTools/media/css/TableTools.css' => array(),
+        ),
+        'dependencies' => array(
+          array('datatables', 'datatables'),
+        ),
       );
     }
-
-    $libraries['datatables-bootstrap'] = array(
-      'title' => 'Bootstrap plugin for DataTables',
-      'website' => 'https://cdn.datatables.net//',
-      'version' => '1.10.8',
-      'js' => array(
-        $lib_path . '/bootstrap/dataTables.bootstrap.min.js' => array(),
-      ),
-      'css' => array(
-        $lib_path . '/bootstrap/dataTables.bootstrap.min.css' => array(),
-      ),
-      'dependencies' => array(
-        array('datatables', 'datatables'),
-      ),
-    );
-
-    $libraries['datatables-responsive'] = array(
-      'title' => 'Responsive Extension for DataTables',
-      'website' => 'https://cdn.datatables.net//',
-      'version' => '1.0.7',
-      'js' => array(
-        $lib_path . '/responsive/dataTables.responsive.min.js' => array(),
-      ),
-      'css' => array(
-        $lib_path . '/responsive/responsive.responsive.min.css' => array(),
-      ),
-      'dependencies' => array(
-        array('datatables', 'datatables'),
-      ),
-    );
-
-
+    else {
+      // Bootstrap.
+      $libraries['datatables-bootstrap'] = array(
+        'title' => 'Bootstrap plugin for DataTables',
+        'website' => 'https://cdn.datatables.net//',
+        'version' => '1.10.8',
+        'js' => array(
+          $lib_path . '/bootstrap/dataTables.bootstrap.min.js' => array(),
+        ),
+        'css' => array(
+          $lib_path . '/bootstrap/dataTables.bootstrap.min.css' => array(),
+        ),
+        'dependencies' => array(
+          array('datatables', 'datatables'),
+        ),
+      );
+      // Extensions - variablized for brevity.
+      $extensions = array(
+        'responsive' => array(
+          'version' => '1.0.7',
+          'label' => 'Responsive',
+          'js' => array('/responsive/dataTables.responsive.min.js'),
+          'css' => array('/responsive/responsive.dataTables.min.css'),
+        ),
+        'responsive-bootstrap' => array(
+          'version' => '1.0.7',
+          'label' => 'Responsive Bootstrap',
+          'js' => array('/responsive/dataTables.responsive.min.js'),
+          'css' => array('/responsive/responsive.bootstrap.min.css'),
+        ),
+        'buttons' => array(
+          'version' => '1.0.0',
+          'label' => 'Buttons',
+          'js' => array('/buttons/dataTables.buttons.min.js'),
+          'css' => array('/button/buttons.dataTables.min.css'),
+        ),
+        'buttons-bootstrap' => array(
+          'version' => '1.0.0',
+          'label' => 'Buttons Bootstrap',
+          'js' => array(
+            '/buttons/dataTables.buttons.min.js',
+            '/buttons/buttons.bootstrap.min.js'
+          ),
+          'css' => array('/buttons/buttons.bootstrap.min.css'),
+        ),
+        'select' => array(
+          'version' => '1.0.0',
+          'label' => 'Select',
+          'js' => array('/select/dataTables.select.min.js'),
+          'css' => array('/select/select.dataTables.min.css'),
+        ),
+        'select-bootstrap' => array(
+          'version' => '1.0.0',
+          'label' => 'Select Bootstrap',
+          'js' => array('/select/dataTables.select.min.js'),
+          'css' => array('/select/select.bootstrap.min.css'),
+        ),
+      );
+      // Create the definitions for the above
+      // Note: each library is prefixed with 'datatables-'.
+      foreach ($extensions as $key => $value) {
+        // Quickly ix JS/CSS values.
+        $js = array();
+        foreach ($value['js'] as $index => $file) {
+          $js[$lib_path . '/extensions' . $file] = array();
+        }
+        $css = array();
+        foreach($value['css'] as $file) {
+          $css[$lib_path . '/extensions' . $file] = array();
+        }
+        // Create the libraries definition.
+        $libraries['datatables-' . $key] = array(
+          'title' => $value['label'] . ' Extension for DataTables',
+          'website' => 'https://cdn.datatables.net//',
+          'version' => $value['version'],
+          'js' => $js,
+          'css' => $css,
+          'dependencies' => array(
+            array('datatables', 'datatables'),
+          ),
+        );
+      }
+    }
   }
 
   return $libraries;
@@ -445,23 +491,20 @@ function template_preprocess_datatables_view(&$vars) {
   $vars['classes_array'][] = 'display';
 
   // Is this DataTables 1.10? Then remap the settings.
-  if (_datatables_is_new_version())  {
+  if (_datatables_is_new_version()) {
 
     // Remap the settings for DataTables 1.10.
     $datatable_options = _datatables_settings_1_10($datatable_options);
 
     // Allow for new features, such as JSON caching.
-    if(isset($options['advanced'])) {
+    if (isset($options['advanced'])) {
       // JSON source and deferRender.
-      if(isset($options['advanced']['json_source_enabled']) && $options['advanced']['json_source_enabled'] == '1')  {
-
+      if (isset($options['advanced']['json_source_enabled']) && $options['advanced']['json_source_enabled'] == '1') {
         // Set recordsTotal.
         $datatable_options['recordsTotal'] = count($vars['rows']);
-
         // Generate the JSON file.
         $json_file = _datatables_defer_loading_json($vars['rows'], $view);
         $url = file_create_url($json_file);
-        //dpm($url, '$url');
         // Set the ajax url to json and dataSrc to flat.
         $datatable_options['ajax'] = array(
           'url' => $url,
@@ -470,24 +513,25 @@ function template_preprocess_datatables_view(&$vars) {
         );
         // JSON source implies deferRender.
         $datatable_options['deferRender'] = TRUE;
-
         // Only print the rows for the default pagination.
         $new_render_rows = array_slice($vars['rows'], 0, $options['pages']['display_length']);
         $vars['rows'] = $new_render_rows;
 
-        // Set deferLoading as we've printed out some items arleady.
+        // Set deferLoading as we've printed out some items already.
         $display_length = (int) $options['pages']['display_length'];
-        // Option deferLoading, requires JSON Source.
-        // @TODO This is not working yet, may not be possible.
-        if(isset($options['advanced']['defer_loading_enabled']) && $options['advanced']['defer_loading_enabled'] == '1')  {
-          // Set display length for our own usage.
-
-          // Unknown setting if we're overriding the whole ajax function!
-          // I know deferLoading merges DOM and JSON data. It also sends a
-          // request for each draw. A standard GET fails so you need to override
-          // sending request using ajax.data(). The trick is in ajaxSrc, the
-          // return data, however ajaxSrc doesn't apply filters or sort
-          // anything due to expected server processing.
+        // DeferLoading cannot work without JSON Source.
+        // @TODO In order for this to work, we either use Views processing (nah).
+        // @TODO Or we learn how to return from localstorage (better).
+        if (isset($options['advanced']['defer_loading_enabled']) && $options['advanced']['defer_loading_enabled'] == '1') {
+          /*
+           * I don't know what to set if we're overriding the whole ajax function!
+           * I know deferLoading merges DOM and JSON data. It also sends a
+           * request for each draw. A standard GET fails so you need to override
+           * sending request using ajax.data(). The trick is in ajaxSrc, the
+           * return data, however ajaxSrc doesn't apply filters or sort
+           * anything due to expected server processing.
+           * Disabled for now.
+           */
           $datatable_options['serverSide'] = FALSE;
 
           // Depending on serverSide config, deferLoading works differently.
@@ -495,32 +539,57 @@ function template_preprocess_datatables_view(&$vars) {
             $datatable_options['deferLoading'] = $view->total_rows;
           }
           else {
-            $datatable_options['deferLoading'] = array($display_length, (int) $view->total_rows);
+            $datatable_options['deferLoading'] = array(
+              $display_length,
+              (int) $view->total_rows
+            );
           }
           // Records filtered.
           $datatable_options['recordsFiltered'] = $display_length;
         }
-      }
 
-      // Bootstrap.
-      if(isset($options['advanced']['bootstrap']) && $options['advanced']['bootstrap'] == '1')  {
-        drupal_add_library('datatables', 'datatables-bootstrap');
-        $datatable_options['bootstrap'] = TRUE;
+        // Bootstrap integration.
+        // @todo check plugin exists?!
+        if (isset($options['advanced']['bootstrap']) && $options['advanced']['bootstrap'] == '1') {
+          drupal_add_library('datatables', 'datatables-bootstrap');
+          $datatable_options['bootstrap'] = TRUE;
+        }
+        // Extensions, soo many extensions.
+        if (isset($options['advanced']['extensions'])) {
+          $extensions = $options['advanced']['extensions'];
+          if ($extensions['responsive'] == '1') {
+            !empty($datatable_options['bootstrap'])
+              ? drupal_add_library('datatables', 'datatables-responsive-bootstrap')
+              : drupal_add_library('datatables', 'datatables-responsive');
+            $datatable_options['responsive'] = TRUE;
+            $datatable_options['autoWidth '] = FALSE;
+          }
+          if ($extensions['buttons'] == '1') {
+            !empty($datatable_options['bootstrap'])
+              ? drupal_add_library('datatables', 'datatables-buttons-bootstrap')
+              : drupal_add_library('datatables', 'datatables-buttons');
+            $datatable_options['buttons'] = array(
+              'copy',
+              'csv',
+              'excel',
+              'pdf'
+            );
+            if($datatable_options['dom']) {
+              $datatable_options['dom'] = 'B' . $datatable_options['dom'];
+            }
+          }
+          if ($extensions['select'] == '1') {
+            !empty($datatable_options['bootstrap'])
+              ? drupal_add_library('datatables', 'datatables-select-bootstrap')
+              : drupal_add_library('datatables', 'datatables-select');
+            $datatable_options['select '] = TRUE;
+          }
+        }
       }
-
-      // Responsive.
-      if(isset($options['advanced']['responsive']) && $options['advanced']['responsive'] == '1')  {
-        drupal_add_library('datatables', 'datatables-responsive');
-        $datatable_options['responsive'] = TRUE;
-        $datatable_options['autoWidth '] = FALSE;
-      }
-
     }
-
-
   }
 
-  //dpm($datatable_options, 'FINAL $datatable_options');
+  dpm($datatable_options, 'FINAL $datatable_options');
   #dpm(drupal_json_encode($datatable_options), 'FINAL datatable_options JSON');
 
   // Add DataTables and associated libraries.
@@ -621,7 +690,6 @@ function _datatables_settings_1_10($options) {
     if (isset($option['default_sort_order'])) {
       $columns[$index]['orderSequence'] = array($option['default_sort_order']);
     }
-
   }
 
   // New DataTable 1.10 settings.
@@ -664,13 +732,6 @@ function _datatables_settings_1_10($options) {
       10, 25, 50, 100, "All",
     ),
   );
-
-
-  // TableTools .. we don't add if you don't have.
-  // @todo check plugin exists?!
-  if(isset($old_options['oTableTools'])) {
-    $options['tableTools'] = $old_options['oTableTools'];
-  }
 
   return $options;
 }
