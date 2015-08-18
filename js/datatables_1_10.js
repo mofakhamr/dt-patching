@@ -82,6 +82,8 @@
           }
 
           // Initialize DataTables 1.10+.
+          console.log(drupal_settings.dom);
+          drupal_settings.buttons = ['csv', 'pdf', 'copy'];
           datatable = $(selector).DataTable(drupal_settings);
 
           /**
@@ -93,8 +95,25 @@
             $('tbody tr.views-row').remove();
           });
 
+          console.log(drupal_settings);
+          if (drupal_settings.buttons.length) {
+            new $.fn.dataTable.Buttons( datatable, {
+              buttons: [
+                'copy', 'excel', 'pdf'
+              ]
+            } );
+            console.log('You said Buttons.. Now show me.. buttons!??');
+            console.log(datatable.table().container());
+            datatable.buttons().container()
+              //.appendTo( $('.col-sm-6:eq(0)', datatable.table().container() ) );
+              .appendTo( $('#datatable-1_wrapper', datatable.table().container() ) );
+
+
+          }
+
+
           // Check if table should contain expandable hidden row feature.
-          if (settings.expandable) {
+          if (drupal_settings.expandable) {
             $(selector + ' tbody tr td:first-child:not(.details-control)').addClass('details-control').on('click', function() {
               var datatable = $(selector).DataTable();
               var tr = $(this).closest('tr');

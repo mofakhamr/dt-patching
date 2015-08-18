@@ -200,9 +200,11 @@ class datatables_style_plugin extends views_plugin_style_table {
       $form['advanced'] = array(
         '#type' => 'fieldset',
         '#title' => t('Advanced'),
-        '#description' => t('Datatables has many options, some which conflict with Views functionality. Depending on your needs, some of these options'
-          . ' may benefit your specific use case.'
+        '#description' => t(''
+          . ''
         ),
+        '#description' => t('Datatables has many options, some which conflict with Views functionality. Depending on your needs, some of these options'
+          . '  may benefit your specific use case.'),
         '#collapsible' => TRUE,
         '#collapsed' => TRUE,
       );
@@ -220,7 +222,8 @@ class datatables_style_plugin extends views_plugin_style_table {
         '#type' => 'checkbox',
         '#attributes' => array('readonly' => 'readonly', 'disabled' => 'disabled'),
         '#title' => t('deferLoading and serverSide'),
-        '#description' => t("Using DataTables deferLoading requires serverSide, this causes us some problems as we're not using Views for serverSide."
+        '#description' => t("Using DataTables deferLoading requires serverSide - however this causes us some problems as we're not using "
+          . " Views for serverSide."
           . " Instead we use the datatable API to return the requested results from our JSON file which has the full record set."
           . " This is not ready for release yet... Feel free to contribute!"),
         '#default_value' => isset($this->options['advanced']['defer_loading_enabled']) ? $this->options['advanced']['defer_loading_enabled'] : 0,
@@ -277,8 +280,8 @@ class datatables_style_plugin extends views_plugin_style_table {
         '#type' => 'checkbox',
         '#title' => t('Select Extension Integration'),
         '#description' => t("You must download the Select integration file:<br>
-         https://cdn.datatables.net/select/1.0.0/css/select.bootstrap.min.css<br>
-         https://cdn.datatables.net/select/1.0.0/css/select.dataTables.min.css<br>
+         https://cdn.datatables.net/select/1.0.0/css/dataTables.select.min.css<br>
+         https://cdn.datatables.net/select/1.0.0/js/dataTables.select.min.js<br>
          Or for Bootstrap:<br>
          https://cdn.datatables.net/select/1.0.0/css/select.bootstrap.min.css<br>
          https://cdn.datatables.net/select/1.0.0/js/dataTables.select.min.js<br>
@@ -286,8 +289,12 @@ class datatables_style_plugin extends views_plugin_style_table {
         '#default_value' => isset($this->options['advanced']['extensions']['select']) ? $this->options['advanced']['extensions']['select'] : 0,
       );
 
-      // Auto-detection from : http://www.datatables.net/download/index
-      // @TODO Is this possible? cant use bootstrap for sure.
+      // @TODO Is Auto-detection possible?
+      // https://datatables.net/download/
+      // So many ways to download datatables now - I was going to do min/max
+      // versions but maybe there is an easier way?
+      // @suggestion Supply the JS file url per view? can be combined.
+      // .. pretty sweet cos you only load what you need.
 
     }
 
