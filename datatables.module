@@ -1,9 +1,14 @@
 <?php
-
 /**
  * @file
  * Provides integration of the jQuery DataTables plugin
  */
+
+// Define the regex mask for finding datatables core file.
+define('DATATABLES_CORE_MASK', '/(jquery.|^)(dataTables)(.min|).js$/i');
+// Define the regex for extensions, will need to array_diff with CORE MASK.
+// ^.*(?<!jquery.)(dataTables).*?(.min|).js$ (excludes jquery)
+define('DATATABLES_EXT_MASK', '/^.*(dataTables).*?(.min|).js$/i');
 
 /**
  * Implements hook_theme().
@@ -799,4 +804,26 @@ function _datatables_is_new_version() {
     return TRUE;
   }
   return FALSE;
+}
+
+/**
+ * Wrapper around file_scan_directory() as it does not static cache the scan.
+ *
+ * @param $dir
+ *    The directory to search.
+ * @param $mask
+ *    The regex pattern to pass to file_scan_directory().
+ * @param $options
+ *    Options to pass to file_scan_directory().
+ * @return array
+ */
+function _datatables_file_scan_directory($dir, $mask, $options) {
+  // Unique hash based on args for cache key.
+  $hash = md5(json_encode(func_get_args()));
+  $files = &drupal_static($hash);
+  if (!isset($files)) {
+    // Regex mask for all datatable file types.
+    $files = file_scan_directory($dir, $mask, $options);
+  }
+  return $files;
 }
