@@ -554,21 +554,48 @@ function template_preprocess_datatables_view(&$vars) {
         }
 
         // Bootstrap integration.
-        // @todo check plugin exists?!
         if (isset($options['advanced']['bootstrap']) && $options['advanced']['bootstrap'] == '1') {
           drupal_add_library('datatables', 'datatables-bootstrap');
           $datatable_options['bootstrap'] = TRUE;
         }
+
         // Extensions, soo many extensions.
         if (isset($options['advanced']['extensions'])) {
           $extensions = $options['advanced']['extensions'];
+
+          // Responsive.
           if ($extensions['responsive'] == '1') {
+            // Configuration options can be found here:
+            // https://datatables.net/extensions/responsive/examples/display-control/classes.html
             !empty($datatable_options['bootstrap'])
               ? drupal_add_library('datatables', 'datatables-responsive-bootstrap')
               : drupal_add_library('datatables', 'datatables-responsive');
-            $datatable_options['responsive'] = TRUE;
-            $datatable_options['autoWidth '] = FALSE;
+
+            // The default breakpoints.
+            $datatable_options['responsive'] = array(
+              'details' => FALSE,
+              'breakpoints' => array(
+                array('name' => 'desktop', 'width' => 'Infinity'),
+                array('name' => 'tablet-l', 'width' => 1024),
+                array('name' => 'tablet-p', 'width' => 768),
+                array('name' => 'mobile-l', 'width' => 480),
+                array('name' => 'mobile-p', 'width' => 320),
+              ),
+            );
+
+
+            $datatable_options['deferRender'] = FALSE;
+            //unset($datatable_options['autoWidth']);
+            $datatable_options['autoWidth'] = FALSE;
+            // dpm($vars, 'vars');
+            $vars['attributes_array']['style'] = 'width:100%;';
+            // We are required to add classes to the table.
+            // $vars['classes_array'][] = 'table table-striped table-bordered ';
+            $vars['classes_array'][] = 'table table-striped table-bordered dt-responsive nowrap';
+            //$vars['classes_array'][] = 'dt-responsive';
           }
+
+          // Buttons.
           if ($extensions['buttons'] == '1') {
             !empty($datatable_options['bootstrap'])
               ? drupal_add_library('datatables', 'datatables-buttons-bootstrap')
@@ -583,19 +610,28 @@ function template_preprocess_datatables_view(&$vars) {
               $datatable_options['dom'] = 'B' . $datatable_options['dom'];
             }
           }
+
+          // Select.
           if ($extensions['select'] == '1') {
             !empty($datatable_options['bootstrap'])
               ? drupal_add_library('datatables', 'datatables-select-bootstrap')
               : drupal_add_library('datatables', 'datatables-select');
             $datatable_options['select '] = TRUE;
           }
+
         }
       }
     }
   }
 
+
+  // Allow other modules to adjust the settings via drupal_alter().
+  // In order to allow multiple hook ins, we use the view name as the key, so
+  // the alter key becomes datatables_VIEWNAME_alter().
+  drupal_alter('datatables_' . $view->name, $datatable_options);
+
   dpm($datatable_options, 'FINAL $datatable_options');
-  #dpm(drupal_json_encode($datatable_options), 'FINAL datatable_options JSON');
+  //dpm(drupal_json_encode($datatable_options), 'FINAL');
 
   // Add DataTables and associated libraries.
   drupal_add_library('datatables', 'datatables');
@@ -766,28 +802,37 @@ function _datatables_get_path() {
 
 /**
  * Gets the version of datatables javascript file from docblock comments.
+ *
+ * @param bool $uri
  * @return array|bool
  */
-function _datatables_get_version() {
-  $version = &drupal_static(__FUNCTION__);
+function _datatables_get_version($uri = FALSE) {
+  $version = &drupal_static(__FUNCTION__ . $uri);
   cache_clear_all('datatables_version', 'cache');
-
   if (!isset($version)) {
     if ($cache = cache_get('datatables_version')) {
       $version = $cache->data;
     }
     else {
-      $file = _datatables_get_path() . '/media/js/jquery.dataTables.js';
+      // If file not supplied get the first encountered core datatable file.
+      if(empty($uri)) {
+        $files = _datatables_file_scan_directory(_datatables_get_path(), DATATABLES_CORE_MASK);
+        if (!empty($files))  {
+          $file = reset($files);
+          $uri = $file->uri;
+        }
+      }
+      // $file = _datatables_get_path() . '/media/js/jquery.dataTables.js';
       // Regex the version, works on production and minified files, for later.
-      if ($handle = fopen($file, "r")) {
+      if ($uri && $handle = fopen($uri, "r")) {
         $contents = fread($handle, 1024);
-        $pattern = '/(!\sDataTables|@version)\s*([0-9]*\.[0-9]*)/';
+        $pattern = '/(DataTables)\s*([0-9]*\.[0-9]*)/i';
         preg_match($pattern, $contents, $matches);
         if (!empty($matches)) {
           $version = array_pop($matches);
+          cache_set('datatables_version', $version, 'cache');
         }
       }
-      cache_set('datatables_version', $version, 'cache');
     }
   }
   return $version;
@@ -817,7 +862,7 @@ function _datatables_is_new_version() {
  *    Options to pass to file_scan_directory().
  * @return array
  */
-function _datatables_file_scan_directory($dir, $mask, $options) {
+function _datatables_file_scan_directory($dir, $mask, $options = array()) {
   // Unique hash based on args for cache key.
   $hash = md5(json_encode(func_get_args()));
   $files = &drupal_static($hash);

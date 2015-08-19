@@ -237,7 +237,8 @@ class datatables_style_plugin extends views_plugin_style_table {
         '#description' => t("You must download the Bootstrap integration files:<br>
          https://cdn.datatables.net/1.10.8/css/dataTables.bootstrap.min.css<br>
          https://cdn.datatables.net/1.10.8/js/dataTables.bootstrap.min.js<br>
-         and place them in a 'bootstrap/' sub folder in your Datatables folder."),
+         and place them in a 'bootstrap/' sub folder in your Datatables folder.<br>
+         <strong>Note: You MUST use datatables 1.10.8 in order for bootstrap to work effectively.</strong>"),
         '#default_value' => isset($this->options['advanced']['bootstrap']) ? $this->options['advanced']['bootstrap'] : 0,
       );
       // Extensions Integration.
