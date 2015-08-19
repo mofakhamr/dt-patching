@@ -495,8 +495,41 @@ function template_preprocess_datatables_view(&$vars) {
   $vars['id'] = _datatables_get_id();
   $vars['classes_array'][] = 'display';
 
+  // Allow other modules to adjust the settings via drupal_alter().
+  drupal_alter('datatables_pre_view', $datatable_options, $vars);
+
+  // In order to allow multiple hook ins, we use the view name as the key, so
+  // the alter key becomes datatables_VIEWNAME_alter().
+  drupal_alter('datatables_' . $view->name, $datatable_options, $vars);
+
+  dpm($datatable_options, 'FINAL $datatable_options');
+  //dpm(drupal_json_encode($datatable_options), 'FINAL');
+
+  // Add DataTables and associated libraries.
+  drupal_add_library('datatables', 'datatables');
+  // Add our settings for our DataTable initialization JS to pick up.
+  drupal_add_js(array('datatables' => array('#' . $vars['id'] => $datatable_options)), array('type' => 'setting', 'scope' => JS_DEFAULT));
+}
+
+
+/**
+ * Implements hook_datatables_pre_view_alter().
+ *
+ * Separated from template_preprocess_datatables_view() because its huge.
+ *
+ * @param $datatable_options
+ * @param $vars
+ */
+function datatables_datatables_pre_view_alter(&$datatable_options, &$vars) {
   // Is this DataTables 1.10? Then remap the settings.
   if (_datatables_is_new_version()) {
+
+    $view = $vars['view'];
+    $options  = $view->style_plugin->options;
+    #$handler  = $view->style_plugin;
+
+    #$fields   = &$view->field;
+    #$columns  = $handler->sanitize_columns($options['columns'], $fields);
 
     // Remap the settings for DataTables 1.10.
     $datatable_options = _datatables_settings_1_10($datatable_options);
@@ -574,13 +607,13 @@ function template_preprocess_datatables_view(&$vars) {
             // The default breakpoints.
             $datatable_options['responsive'] = array(
               'details' => FALSE,
-              'breakpoints' => array(
+/*              'breakpoints' => array(
                 array('name' => 'desktop', 'width' => 'Infinity'),
                 array('name' => 'tablet-l', 'width' => 1024),
                 array('name' => 'tablet-p', 'width' => 768),
                 array('name' => 'mobile-l', 'width' => 480),
                 array('name' => 'mobile-p', 'width' => 320),
-              ),
+              ),*/
             );
 
 
@@ -624,21 +657,7 @@ function template_preprocess_datatables_view(&$vars) {
     }
   }
 
-
-  // Allow other modules to adjust the settings via drupal_alter().
-  // In order to allow multiple hook ins, we use the view name as the key, so
-  // the alter key becomes datatables_VIEWNAME_alter().
-  drupal_alter('datatables_' . $view->name, $datatable_options);
-
-  dpm($datatable_options, 'FINAL $datatable_options');
-  //dpm(drupal_json_encode($datatable_options), 'FINAL');
-
-  // Add DataTables and associated libraries.
-  drupal_add_library('datatables', 'datatables');
-  // Add our settings for our DataTable initialization JS to pick up.
-  drupal_add_js(array('datatables' => array('#' . $vars['id'] => $datatable_options)), array('type' => 'setting', 'scope' => JS_DEFAULT));
 }
-
 /**
  * JSON encodes the rendered rows for use as an MD5 filename.
  *   Static-ized for performance.

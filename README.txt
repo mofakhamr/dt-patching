@@ -7,11 +7,11 @@ For full documentation and examples, visit the DataTables jQuery plugin page:
   http://plugins.jquery.com/project/DataTables
 
 
--- Installation --
+-- Installation datatables v1.9 --
 
 * Copy the datatables module to sites/all/modules directory.
 
-* Download the latest DataTables jQuery plugin 1.9 package from:
+* Download the latest DataTables jQuery plugin package from:
     http://datatables.net/download/
 
 * Extract the archive and move the dataTables-1.9/media folder to the 
@@ -19,9 +19,14 @@ For full documentation and examples, visit the DataTables jQuery plugin page:
 
     sites/all/modules/datatables/dataTables/
 
-  The final path to the media folder should be:
+  The final path to the media folder for 1.9 should be:
 
     sites/all/modules/datatables/dataTables/media
+
+  The final path to the media folder for 1.10 should be:
+
+    sites/all/modules/datatables/DataTables/js
+    (Note: Capitalisation is different to 1.9)
 
 * Alternatively, if you are using the Libraries API module
   (http://drupal.org/project/libraries), you can place the dataTables folder in
@@ -30,6 +35,34 @@ For full documentation and examples, visit the DataTables jQuery plugin page:
   information.
 
 * Enable the module at Administer >> Site building >> Modules.
+
+-- Installation datatables v1.10 additional notes--
+
+* The complexity of multiple files working together has been greatly eased by
+  the datatables package builder http://datatables.net/download/ - I have only
+  tested bootstrap using drupal.org/project/bootstrap.
+
+* If using the bootstrap theme, do not download:
+    jQueryUI
+    jQuery
+    Bootstrap Styling library
+    Foundation Styling library
+  You can include:
+      Datatables *Required
+      Bootstrap (optional, requires bootstrap theme)
+      Foundation (optional, requires foundation theme)
+      Responsive
+      Buttons
+      Select
+      ..more coming!
+
+* Make sure you use the following packaging options:
+    Minify
+    Single file
+    Local files
+
+* Files will be auto-discovered and added, so only choose what you intend to
+  use, you can of course add more later.
 
 -- Usage --
 
@@ -52,37 +85,10 @@ For full documentation and examples, visit the DataTables jQuery plugin page:
 * DataTables also allows for columns to be either visible, hidden or expandable.
   You can select these options under the fieldset HIDDEN AND EXPANDABLE COLUMNS.
 
-* A new fieldset DEFER LOADING OF ADDITIONAL RECORDS has been added, this
-  setting takes advantage of DataTables deferLoading, deferRender and ajax
-  options by only rendering HTML for rows up to 'Default Page Length'. The rest
-  of the rows will be made available over ajax - greatly reducing page weight
-  and memory usage.
-
 -- Extensions --
 
-* Currently only Responsive, Select and Buttons are implemented, to keep in line
-  with the previous module capabilities.
-
-* To enable any or all of the three available extensions, you need to download
-  either the regular or bootstrap versions of both CSS and JS files.
-
-* First you need to create a folder called "extensions" in the same place you
-  put the datatables folder, so it will look like this:
-    datatables/media/js/jquery.dataTables.js
-    datatables/extensions
-
-* Then for you place each extension into a subfolder of extension, named after
-  the extension itself:
-    datatables/extensions/responsive/
-    datatables/extensions/responsive/dataTables.responsive.min.js
-    datatables/extensions/responsive/responsive.bootstrap.min.css
-
-* Bootstrap is different to extensions and as such should be placed in
-  a bootstrap subfolder:
-    datatables/media/js/jquery.dataTables.js
-    datatables/bootstrap
-    datatables/bootstrap/dataTables.bootstrap.min.js
-    datatables/bootstrap/dataTables.bootstrap.min.css
+* More to come on extensions but it's worth looking at
+  datatables_datatables_alter() if you have further requirements.
 
 -- Notes --
 
