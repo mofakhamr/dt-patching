@@ -55,17 +55,16 @@ function datatables_library() {
 
     // Do not create library definition if not applicable to version.
     if (!_datatables_is_new_version()) {
-      $tt_sub = _datatables_is_new_version() ? '/tabletools' : '/extras/TableTools/media';
       $libraries['datatables-tabletools'] = array(
         'title' => 'Tabletools plugin for DataTables',
         'website' => 'http://www.datatables.net/extras/tabletools/',
         'version' => '1.1.4',
         'js' => array(
-          $lib_path . $tt_sub . '/extras/TableTools/media/js/TableTools.js' => array(),
-          $lib_path . $tt_sub . '/js/ZeroClipboard.js' => array(),
+          $lib_path . '/extras/TableTools/media/js/TableTools.js' => array(),
+          $lib_path . '/js/ZeroClipboard.js' => array(),
         ),
         'css' => array(
-          $lib_path . $tt_sub . '/extras/TableTools/media/css/TableTools.css' => array(),
+          $lib_path . '/extras/TableTools/media/css/TableTools.css' => array(),
         ),
         'dependencies' => array(
           array('datatables', 'datatables'),
@@ -809,15 +808,27 @@ function _datatables_get_id() {
  */
 function _datatables_get_path() {
   $lib_path = NULL;
-  if (module_exists('libraries') && file_exists(libraries_get_path('datatables') . '/media/js/jquery.dataTables.js')) {
-    $lib_path = libraries_get_path('datatables');
-  }
-  elseif (file_exists(drupal_get_path('module', 'datatables') . '/dataTables/media/js/jquery.dataTables.js')) {
-    $lib_path = drupal_get_path('module', 'datatables') . '/dataTables';
-  }
 
+  if (module_exists('libraries')) {
+    $files = _datatables_file_scan_directory(libraries_get_path('datatables'), DATATABLES_CORE_MASK);
+    if(!empty($files)) {
+      $lib_path = libraries_get_path('datatables');
+    }
+  }
+  else {
+    $mod_path = drupal_get_path('module', 'datatables');
+    // Ignore case, just get the right sub-dir.
+    $files = _datatables_file_scan_directory($mod_path, DATATABLES_CORE_MASK);
+    if (!empty($files)) {
+      $file = reset($files);
+      $uri = ltrim(str_replace(libraries_get_path('datatables'), '', $file->uri), '/');
+      $paths = explode('/', $uri);
+      $lib_path = drupal_get_path('module', 'datatables') . $paths[0];
+    }
+  }
   return $lib_path;
 }
+
 
 /**
  * Gets the version of datatables javascript file from docblock comments.
@@ -890,4 +901,16 @@ function _datatables_file_scan_directory($dir, $mask, $options = array()) {
     $files = file_scan_directory($dir, $mask, $options);
   }
   return $files;
+}
+
+/**
+ * Work in progress.
+ *
+ * Discovers all core and extension files, separates the min from the max.
+ *
+ * Having this in libraries seems a bit much, it's only this module who adds it.
+ * Besides, there are many extensions - we don't want to add them all.
+ */
+function _datatables_autodiscover() {
+
 }
