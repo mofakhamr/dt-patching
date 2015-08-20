@@ -113,7 +113,7 @@ function datatables_library() {
         ),
       );
       // Responsive.
-      $libraries['responsive'] = array(
+      $libraries['datatables-responsive'] = array(
         'title' => 'Bootstrap plugin for DataTables',
         'website' => 'https://cdn.datatables.net//',
         'version' => '1.0.7',
@@ -128,7 +128,7 @@ function datatables_library() {
         ),
       );
       // Responsive boostrap.
-      $libraries['responsive-bootstrap'] = array(
+      $libraries['datatables-responsive-bootstrap'] = array(
         'title' => 'Bootstrap plugin for DataTables',
         'website' => 'https://cdn.datatables.net//',
         'version' => '1.0.7',
