@@ -112,48 +112,37 @@ function datatables_library() {
           array('datatables', 'datatables'),
         ),
       );
-      // Extensions - variablized for brevity.
-      $extensions = array(
-        'responsive' => array(
-          'version' => '1.0.7',
-          'label' => 'Responsive',
-          'js' => array('/js/dataTables.responsive.min.js'),
-          'css' => array('/css/responsive.dataTables.css'),
+      // Responsive.
+      $libraries['responsive'] = array(
+        'title' => 'Bootstrap plugin for DataTables',
+        'website' => 'https://cdn.datatables.net//',
+        'version' => '1.0.7',
+        'js' => array(
+          $lib_path . '/js/dataTables.responsive.min.js' => array(),
         ),
-        'responsive-bootstrap' => array(
-          'version' => '1.0.7',
-          'label' => 'Responsive Bootstrap',
-          'js' => array('/js/dataTables.responsive.min.js'),
-          'css' => array(
-            '/css/responsive.bootstrap.css',
-            '/css/responsive.dataTables.css'
-          ),
+        'css' => array(
+          $lib_path . '/css/responsive.dataTables.css' => array(),
+        ),
+        'dependencies' => array(
+          array('datatables', 'datatables'),
         ),
       );
-      // Create the definitions for the above
-      // Note: each library is prefixed with 'datatables-'.
-      foreach ($extensions as $key => $value) {
-        // Quickly ix JS/CSS values.
-        $js = array();
-        foreach ($value['js'] as $index => $file) {
-          $js[$lib_path . '/' . $file] = array();
-        }
-        $css = array();
-        foreach($value['css'] as $file) {
-          $css[$lib_path . '/' . $file] = array();
-        }
-        // Create the libraries definition.
-        $libraries['datatables-' . $key] = array(
-          'title' => $value['label'] . ' Extension for DataTables',
-          'website' => 'https://cdn.datatables.net/',
-          'version' => $value['version'],
-          'js' => $js,
-          'css' => $css,
-          'dependencies' => array(
-            array('datatables', 'datatables'),
-          ),
-        );
-      }
+      // Responsive boostrap.
+      $libraries['responsive-bootstrap'] = array(
+        'title' => 'Bootstrap plugin for DataTables',
+        'website' => 'https://cdn.datatables.net//',
+        'version' => '1.0.7',
+        'js' => array(
+          $lib_path . '/js/dataTables.responsive.min.js' => array(),
+        ),
+        'css' => array(
+          $lib_path . '/css/responsive.bootstrap.css' => array(),
+          $lib_path . '/css/responsive.dataTables.css' => array(),
+        ),
+        'dependencies' => array(
+          array('datatables', 'datatables'),
+        ),
+      );
     }
   }
 
