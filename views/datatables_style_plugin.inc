@@ -234,69 +234,28 @@ class datatables_style_plugin extends views_plugin_style_table {
         '#title' => t('Bootstrap Integration'),
         '#description' => t("You must download the Bootstrap integration files from https://cdn.datatables.net/ and place them in a 'bootstrap/' sub folder in "
           . "your Datatables folder."),
-        '#description' => t("You must download the Bootstrap integration files:<br>
-         https://cdn.datatables.net/1.10.8/css/dataTables.bootstrap.min.css<br>
-         https://cdn.datatables.net/1.10.8/js/dataTables.bootstrap.min.js<br>
-         and place them in a 'bootstrap/' sub folder in your Datatables folder.<br>
-         <strong>Note: You MUST use datatables 1.10.8 in order for bootstrap to work effectively.</strong>"),
+        '#description' => t("You must download the Bootstrap integration files:<br>"
+          . "Please see the README provided with this module.<br>"),
         '#default_value' => isset($this->options['advanced']['bootstrap']) ? $this->options['advanced']['bootstrap'] : 0,
       );
       // Extensions Integration.
-      $form['advanced']['extensions'] = array(
+      $form['responsive'] = array(
         '#type' => 'fieldset',
-        '#title' => t('Extensions'),
-        '#description' => t('Extensions'),
+        '#title' => t('Responsive'),
+        '#description' => t("You must download the Responsive integration files<br>
+         Please see the README provided with this module.<br>"
+         . "<strong>Note: You MUST use datatables 1.10.8 in order for Responsive to work effectively "
+         . "and be using jQuery 1.9 or later.</strong>"),
         '#collapsed' => TRUE,
         '#collapsible' => TRUE,
       );
       // Responsive extension.
-      $form['advanced']['extensions']['responsive'] = array(
+      $form['responsive']['enabled'] = array(
         '#type' => 'checkbox',
+        '#description' => t('Enable Responsive?'),
         '#title' => t('Responsive Extension Integration'),
-        '#description' => t("You must download the Responsive integration files:<br>
-         https://cdn.datatables.net/responsive/1.0.7/css/responsive.dataTables.min.css<br>
-         https://cdn.datatables.net/responsive/1.0.7/js/dataTables.responsive.min.js<br>
-         Or for Bootstrap:<br>
-         https://cdn.datatables.net/responsive/1.0.7/css/responsive.bootstrap.min.css<br>
-         https://cdn.datatables.net/responsive/1.0.7/js/dataTables.responsive.min.js<br>
-         and place them in a 'extensions/responsive/' sub folder in your Datatables folder."),
-        '#default_value' => isset($this->options['advanced']['extensions']['responsive']) ? $this->options['advanced']['extensions']['responsive'] : 0,
+        '#default_value' => isset($this->options['responsive']['enabled']) ? $this->options['responsive']['enabled'] : 0,
       );
-      // Buttons extension.
-      $form['advanced']['extensions']['buttons'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Buttons Extension Integration'),
-        '#description' => t("You must download the Buttons integration file:<br>
-         https://cdn.datatables.net/buttons/1.0.0/css/buttons.dataTables.min.css<br>
-         https://cdn.datatables.net/buttons/1.0.0/js/dataTables.buttons.min.js<br>
-         Or for Bootstrap:<br>
-         https://cdn.datatables.net/buttons/1.0.0/css/buttons.bootstrap.min.css<br>
-         https://cdn.datatables.net/buttons/1.0.0/js/dataTables.buttons.min.js<br>
-         https://cdn.datatables.net/buttons/1.0.0/js/buttons.bootstrap.min.js<br>
-         and place them in a 'extensions/buttons/' sub folder in your Datatables folder."),
-        '#default_value' => isset($this->options['advanced']['extensions']['buttons']) ? $this->options['advanced']['extensions']['buttons'] : 0,
-      );
-      // Select extension.
-      $form['advanced']['extensions']['select'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Select Extension Integration'),
-        '#description' => t("You must download the Select integration file:<br>
-         https://cdn.datatables.net/select/1.0.0/css/dataTables.select.min.css<br>
-         https://cdn.datatables.net/select/1.0.0/js/dataTables.select.min.js<br>
-         Or for Bootstrap:<br>
-         https://cdn.datatables.net/select/1.0.0/css/select.bootstrap.min.css<br>
-         https://cdn.datatables.net/select/1.0.0/js/dataTables.select.min.js<br>
-         and place them in a 'extensions/select/' sub folder in your Datatables folder."),
-        '#default_value' => isset($this->options['advanced']['extensions']['select']) ? $this->options['advanced']['extensions']['select'] : 0,
-      );
-
-      // @TODO Is Auto-detection possible?
-      // https://datatables.net/download/
-      // So many ways to download datatables now - I was going to do min/max
-      // versions but maybe there is an easier way?
-      // @suggestion Supply the JS file url per view? can be combined.
-      // .. pretty sweet cos you only load what you need.
-
     }
 
   }

@@ -32,24 +32,49 @@ function datatables_theme() {
 function datatables_library() {
   $libraries = array();
 
+  // Get the main library path.
   $lib_path = _datatables_get_path();
 
   // Make sure we have a valid library path before returning library load info.
   if (!empty($lib_path)) {
+    // Get the version of the discovered datatables files.
     $version = _datatables_get_version();
 
-    $js_file = _datatables_is_new_version() ? 'datatables_1_10.js' : 'datatables.js';
+    $is_new = _datatables_is_new_version();
 
-    $libraries['datatables'] = array(
+    $js_file = drupal_get_path('module', 'datatables') . '/js/';
+    if ($is_new) {
+      $js_file .= 'datatables_1_10.js';
+    }
+    else {
+      $js_file .= 'datatables.js';
+      $lib_path .= '/media';
+    }
+
+    $libraries['datatables-debug'] = array(
       'title' => 'DataTables',
       'website' => 'http://http://datatables.net/',
       'version' => $version,
       'js' => array(
-        $lib_path . '/media/js/jquery.dataTables.js' => array(),
-        drupal_get_path('module', 'datatables') . '/js/' . $js_file => array(),
+        $lib_path . '/js/jquery.dataTables.js' => array(),
+        $js_file => array(),
       ),
       'css' => array(
-        $lib_path . '/media/css/demo_table.css' => array(),
+        $lib_path . '/css/jquery.dataTables.css' => array(),
+      ),
+    );
+    $libraries['datatables'] = array(
+      'title' => 'DataTables Minified',
+      'website' => 'http://http://datatables.net/',
+      'version' => $version,
+      'js' => array(
+        $lib_path . '/js/jquery.dataTables.min.js' => array(),
+        $js_file => array(),
+      ),
+      'css' => array(
+        // This add nasty black border and breaks responsive at mobile level.
+        // I think I read somewhere you cannot use it with bootstrap tbh.
+        // $lib_path . '/css/jquery.dataTables.css' => array(),
       ),
     );
 
@@ -78,10 +103,10 @@ function datatables_library() {
         'website' => 'https://cdn.datatables.net//',
         'version' => '1.10.8',
         'js' => array(
-          $lib_path . '/bootstrap/dataTables.bootstrap.min.js' => array(),
+          $lib_path . '/js/dataTables.bootstrap.min.js' => array(),
         ),
         'css' => array(
-          $lib_path . '/bootstrap/dataTables.bootstrap.min.css' => array(),
+          $lib_path . '/css/dataTables.bootstrap.css' => array(),
         ),
         'dependencies' => array(
           array('datatables', 'datatables'),
@@ -92,41 +117,17 @@ function datatables_library() {
         'responsive' => array(
           'version' => '1.0.7',
           'label' => 'Responsive',
-          'js' => array('/responsive/dataTables.responsive.min.js'),
-          'css' => array('/responsive/responsive.dataTables.min.css'),
+          'js' => array('/js/dataTables.responsive.min.js'),
+          'css' => array('/css/responsive.dataTables.css'),
         ),
         'responsive-bootstrap' => array(
           'version' => '1.0.7',
           'label' => 'Responsive Bootstrap',
-          'js' => array('/responsive/dataTables.responsive.min.js'),
-          'css' => array('/responsive/responsive.bootstrap.min.css'),
-        ),
-        'buttons' => array(
-          'version' => '1.0.0',
-          'label' => 'Buttons',
-          'js' => array('/buttons/dataTables.buttons.min.js'),
-          'css' => array('/button/buttons.dataTables.min.css'),
-        ),
-        'buttons-bootstrap' => array(
-          'version' => '1.0.0',
-          'label' => 'Buttons Bootstrap',
-          'js' => array(
-            '/buttons/dataTables.buttons.min.js',
-            '/buttons/buttons.bootstrap.min.js'
+          'js' => array('/js/dataTables.responsive.min.js'),
+          'css' => array(
+            '/css/responsive.bootstrap.css',
+            '/css/responsive.dataTables.css'
           ),
-          'css' => array('/buttons/buttons.bootstrap.min.css'),
-        ),
-        'select' => array(
-          'version' => '1.0.0',
-          'label' => 'Select',
-          'js' => array('/select/dataTables.select.min.js'),
-          'css' => array('/select/select.dataTables.min.css'),
-        ),
-        'select-bootstrap' => array(
-          'version' => '1.0.0',
-          'label' => 'Select Bootstrap',
-          'js' => array('/select/dataTables.select.min.js'),
-          'css' => array('/select/select.bootstrap.min.css'),
         ),
       );
       // Create the definitions for the above
@@ -135,16 +136,16 @@ function datatables_library() {
         // Quickly ix JS/CSS values.
         $js = array();
         foreach ($value['js'] as $index => $file) {
-          $js[$lib_path . '/extensions' . $file] = array();
+          $js[$lib_path . '/' . $file] = array();
         }
         $css = array();
         foreach($value['css'] as $file) {
-          $css[$lib_path . '/extensions' . $file] = array();
+          $css[$lib_path . '/' . $file] = array();
         }
         // Create the libraries definition.
         $libraries['datatables-' . $key] = array(
           'title' => $value['label'] . ' Extension for DataTables',
-          'website' => 'https://cdn.datatables.net//',
+          'website' => 'https://cdn.datatables.net/',
           'version' => $value['version'],
           'js' => $js,
           'css' => $css,
@@ -591,66 +592,28 @@ function datatables_datatables_pre_view_alter(&$datatable_options, &$vars) {
           $datatable_options['bootstrap'] = TRUE;
         }
 
-        // Extensions, soo many extensions.
-        if (isset($options['advanced']['extensions'])) {
-          $extensions = $options['advanced']['extensions'];
-
+        // Responsive.
+        if (isset($options['responsive']['enabled'])) {
+          $responsive = $options['responsive'];
           // Responsive.
-          if ($extensions['responsive'] == '1') {
+          if ($responsive['enabled'] == '1') {
             // Configuration options can be found here:
             // https://datatables.net/extensions/responsive/examples/display-control/classes.html
             !empty($datatable_options['bootstrap'])
               ? drupal_add_library('datatables', 'datatables-responsive-bootstrap')
               : drupal_add_library('datatables', 'datatables-responsive');
 
-            // The default breakpoints.
+            // Enable Responsive.
             $datatable_options['responsive'] = array(
               'details' => FALSE,
-/*              'breakpoints' => array(
-                array('name' => 'desktop', 'width' => 'Infinity'),
-                array('name' => 'tablet-l', 'width' => 1024),
-                array('name' => 'tablet-p', 'width' => 768),
-                array('name' => 'mobile-l', 'width' => 480),
-                array('name' => 'mobile-p', 'width' => 320),
-              ),*/
             );
-
-
-            $datatable_options['deferRender'] = FALSE;
-            //unset($datatable_options['autoWidth']);
+            // Still working this lot out.
             $datatable_options['autoWidth'] = FALSE;
             // dpm($vars, 'vars');
             $vars['attributes_array']['style'] = 'width:100%;';
             // We are required to add classes to the table.
-            // $vars['classes_array'][] = 'table table-striped table-bordered ';
             $vars['classes_array'][] = 'table table-striped table-bordered dt-responsive nowrap';
-            //$vars['classes_array'][] = 'dt-responsive';
           }
-
-          // Buttons.
-          if ($extensions['buttons'] == '1') {
-            !empty($datatable_options['bootstrap'])
-              ? drupal_add_library('datatables', 'datatables-buttons-bootstrap')
-              : drupal_add_library('datatables', 'datatables-buttons');
-            $datatable_options['buttons'] = array(
-              'copy',
-              'csv',
-              'excel',
-              'pdf'
-            );
-            if($datatable_options['dom'] && strpos($datatable_options['dom'], 'B') === FALSE) {
-              $datatable_options['dom'] = 'B' . $datatable_options['dom'];
-            }
-          }
-
-          // Select.
-          if ($extensions['select'] == '1') {
-            !empty($datatable_options['bootstrap'])
-              ? drupal_add_library('datatables', 'datatables-select-bootstrap')
-              : drupal_add_library('datatables', 'datatables-select');
-            $datatable_options['select '] = TRUE;
-          }
-
         }
       }
     }
@@ -805,6 +768,10 @@ function _datatables_get_id() {
 
 /**
  * Returns path to datatables library.
+ *
+ * Perform a case insensitive regex search for the datatables files using
+ * file_scan_directory(),  we check libraries first then check this module's
+ * folder which results in module version overriding libraries.
  */
 function _datatables_get_path() {
   $lib_path = NULL;
@@ -815,17 +782,12 @@ function _datatables_get_path() {
       $lib_path = libraries_get_path('datatables');
     }
   }
-  else {
-    $mod_path = drupal_get_path('module', 'datatables');
-    // Ignore case, just get the right sub-dir.
-    $files = _datatables_file_scan_directory($mod_path, DATATABLES_CORE_MASK);
-    if (!empty($files)) {
-      $file = reset($files);
-      $uri = ltrim(str_replace(libraries_get_path('datatables'), '', $file->uri), '/');
-      $paths = explode('/', $uri);
-      $lib_path = drupal_get_path('module', 'datatables') . $paths[0];
-    }
+  // Check if the library exists in module folder.
+  $mod_path = drupal_get_path('module', 'datatables');
+  if (is_readable($mod_path . '/dataTables')) {
+    $lib_path = $mod_path . '/dataTables';
   }
+
   return $lib_path;
 }
 
@@ -837,14 +799,16 @@ function _datatables_get_path() {
  * @return array|bool
  */
 function _datatables_get_version($uri = FALSE) {
-  $version = &drupal_static(__FUNCTION__ . $uri);
-  cache_clear_all('datatables_version', 'cache');
+  $cid = __FUNCTION__ . $uri;
+  $version = &drupal_static($cid);
+  cache_clear_all($cid, 'cache');
   if (!isset($version)) {
-    if ($cache = cache_get('datatables_version')) {
+    if ($cache = cache_get($cid)) {
       $version = $cache->data;
     }
     else {
       // If file not supplied get the first encountered core datatable file.
+      // There should not be two versions in the same folder.
       if(empty($uri)) {
         $files = _datatables_file_scan_directory(_datatables_get_path(), DATATABLES_CORE_MASK);
         if (!empty($files))  {
@@ -856,11 +820,15 @@ function _datatables_get_version($uri = FALSE) {
       // Regex the version, works on production and minified files, for later.
       if ($uri && $handle = fopen($uri, "r")) {
         $contents = fread($handle, 1024);
+        // Search for datatable version as used in docblock comment.
         $pattern = '/(DataTables)\s*([0-9]*\.[0-9]*)/i';
         preg_match($pattern, $contents, $matches);
         if (!empty($matches)) {
+          // If we found a match its in the last capture group.
           $version = array_pop($matches);
-          cache_set('datatables_version', $version, 'cache');
+          if (!empty($version)) {
+            cache_set($cid, $version, 'cache');
+          }
         }
       }
     }

@@ -25,24 +25,37 @@ For full documentation and examples, visit the DataTables jQuery plugin page:
 
   The final path to the media folder for 1.10 should be:
 
-    sites/all/modules/datatables/DataTables/js
-    (Note: Capitalisation is different to 1.9)
+    sites/all/modules/datatables/dataTables/js
 
 * Alternatively, if you are using the Libraries API module
   (http://drupal.org/project/libraries), you can place the dataTables folder in
-  sites/all/libraries/ so final path is sites/all/libraries/datatables (note the
-  lower case directory name).  See http://drupal.org/node/1440066 for more
-  information.
+  sites/all/libraries/ so final path is sites/all/libraries/datatables/media
+  (note the lower case directory name).  See http://drupal.org/node/1440066 for
+  more information.
 
 * Enable the module at Administer >> Site building >> Modules.
 
 -- Installation datatables v1.10 additional notes--
 
+* In DataTables 1.10 the media folder has been removed, it is replaced with
+  separate css, js and images folders. Location examples:
+
+   sites/all/modules/datatables/dataTables/js
+   sites/all/modules/datatables/dataTables/css
+   sites/all/modules/datatables/dataTables/images
+
+   sites/all/libraries/datatables/dataTables/js
+   sites/all/libraries/datatables/dataTables/css
+   sites/all/libraries/datatables/dataTables/images
+
+-- Bootstrap notes --
+
 * The complexity of multiple files working together has been greatly eased by
   the datatables package builder http://datatables.net/download/ - I have only
-  tested bootstrap using drupal.org/project/bootstrap.
+  tested bootstrap using the contributed theme from
+  http://drupal.org/project/bootstrap.
 
-* If using the bootstrap theme, do not download:
+* If using the bootstrap theme, do not download these libraries:
     jQueryUI
     jQuery
     Bootstrap Styling library
@@ -52,8 +65,6 @@ For full documentation and examples, visit the DataTables jQuery plugin page:
       Bootstrap (optional, requires bootstrap theme)
       Foundation (optional, requires foundation theme)
       Responsive
-      Buttons
-      Select
       ..more coming!
 
 * Make sure you use the following packaging options:
@@ -61,8 +72,8 @@ For full documentation and examples, visit the DataTables jQuery plugin page:
     Single file
     Local files
 
-* Files will be auto-discovered and added, so only choose what you intend to
-  use, you can of course add more later.
+* Files will be auto-discovered and that are found will be added, so only choose
+  what you intend to use, you can of course add more later.
 
 -- Usage --
 
@@ -89,6 +100,11 @@ For full documentation and examples, visit the DataTables jQuery plugin page:
 
 * More to come on extensions but it's worth looking at
   datatables_datatables_alter() if you have further requirements.
+
+* IMPORTANT: If you want to install select, buttons or responsive you should
+  manually copy all of the files in the respective folders (yes there's a lot)
+  into the css and js folders that you put everything else into.
+
 
 -- Notes --
 
