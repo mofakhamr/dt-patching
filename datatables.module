@@ -339,11 +339,11 @@ function template_preprocess_datatables_view(&$vars) {
 
   $view     = $vars['view'];
 
-  $options  = $view->style_plugin->options;
+  $style_options  = $view->style_plugin->options;
   $handler  = $view->style_plugin;
 
   $fields   = &$view->field;
-  $columns  = $handler->sanitize_columns($options['columns'], $fields);
+  $columns  = $handler->sanitize_columns($style_options['columns'], $fields);
 
   $position = 0;
   foreach ($columns as $field => $column) {
@@ -354,8 +354,8 @@ function template_preprocess_datatables_view(&$vars) {
     }
 
 
-    if (isset($options['hidden_columns'][$field])) {
-      switch ($options['hidden_columns'][$field]) {
+    if (isset($style_options['hidden_columns'][$field])) {
+      switch ($style_options['hidden_columns'][$field]) {
         case 'expandable':
           $datatable_options['bExpandable'] = TRUE;
         // ... and fall through, since expandable columns are also hidden.
@@ -372,7 +372,7 @@ function template_preprocess_datatables_view(&$vars) {
       // template_preprocess_views_view_table().
       $vars['header'][$field] = check_plain(!empty($fields[$field]) ? $fields[$field]->label() : '');
 
-      if (empty($options['info'][$field]['sortable']) || !$fields[$field]->click_sortable()) {
+      if (empty($style_options['info'][$field]['sortable']) || !$fields[$field]->click_sortable()) {
         $column_options['bSortable'] = FALSE;
       }
       else {
@@ -388,8 +388,8 @@ function template_preprocess_datatables_view(&$vars) {
           $column_options['sType'] = 'date';
         }
         // Store default sort order.
-        if (isset($options['info'][$field]['default_sort_order'])) {
-          $column_options['default_sort_order'] = $options['info'][$field]['default_sort_order'];
+        if (isset($style_options['info'][$field]['default_sort_order'])) {
+          $column_options['default_sort_order'] = $style_options['info'][$field]['default_sort_order'];
         }
         $column_options['bSortable'] = TRUE;
       }
@@ -400,35 +400,35 @@ function template_preprocess_datatables_view(&$vars) {
     // Set default sort order.
     // but dont reset each time.
     // $datatable_options['aaSorting'] = array();
-    if ($options['default'] == $field) {
-      $datatable_options['aaSorting'] = array(array($position, $options['order']));
+    if ($style_options['default'] == $field) {
+      $datatable_options['aaSorting'] = array(array($position, $style_options['order']));
     }
 
     $position++;
   }
 
   // Enable table info display, if necessary.
-  $datatable_options['bInfo'] = $options['elements']['table_info'];
-  $datatable_options['bFilter'] = $options['elements']['search_box'];
-  $datatable_options['bStateSave'] = $options['elements']['save_state'];
+  $datatable_options['bInfo'] = $style_options['elements']['table_info'];
+  $datatable_options['bFilter'] = $style_options['elements']['search_box'];
+  $datatable_options['bStateSave'] = $style_options['elements']['save_state'];
 
-  $datatable_options['bLengthChange'] = $options['pages']['length_change'];
-  $datatable_options['iDisplayLength'] = (int) $options['pages']['display_length'];
+  $datatable_options['bLengthChange'] = $style_options['pages']['length_change'];
+  $datatable_options['iDisplayLength'] = (int) $style_options['pages']['display_length'];
 
   // Enable ThemeRoller support, if necessary.
-  if ($options['layout']['themeroller']) {
+  if ($style_options['layout']['themeroller']) {
     $datatable_options['bJQueryUI'] = TRUE;
   }
 
   // Pass the sDOM parameter, if one is specified.
-  if ($options['layout']['sdom']) {
-    $datatable_options['sDom'] = $options['layout']['sdom'];
+  if ($style_options['layout']['sdom']) {
+    $datatable_options['sDom'] = $style_options['layout']['sdom'];
   }
 
-  $datatable_options['bAutoWidth'] = $options['layout']['autowidth'];
+  $datatable_options['bAutoWidth'] = $style_options['layout']['autowidth'];
 
   // Enable full_numbers pagination if selected.
-  switch ($options['pages']['pagination_style']) {
+  switch ($style_options['pages']['pagination_style']) {
     case 'full_numbers':
       $datatable_options['sPaginationType'] = 'full_numbers';
       break;
@@ -444,14 +444,14 @@ function template_preprocess_datatables_view(&$vars) {
   }
 
   // Enable TableTools plugin support, if necessary.
-  if ($options['elements']['table_tools']) {
+  if ($style_options['elements']['table_tools']) {
     $datatable_options['oTableTools'] = array(
       'sSwfPath' => base_path() . _datatables_get_path() . '/extras/TableTools/media/swf/copy_csv_xls_pdf.swf',
     );
 
     // If a custom sDom is passed, assume that "T" is added, otherwise add it
     // manually.
-    if (!$options['layout']['sdom']) {
+    if (!$style_options['layout']['sdom']) {
       $datatable_options['sDom'] = 'T<"clear">lfrtip';
     }
 
@@ -483,13 +483,12 @@ function template_preprocess_datatables_view(&$vars) {
 
   $vars['id'] = _datatables_get_id();
   $vars['classes_array'][] = 'display';
-
   // Allow other modules to adjust the settings via drupal_alter().
-  drupal_alter('datatables_pre_view', $datatable_options, $vars);
+  drupal_alter('datatables_pre_view', $vars, $datatable_options);
 
   // In order to allow multiple hook ins, we use the view name as the key, so
   // the alter key becomes datatables_VIEWNAME_alter().
-  drupal_alter('datatables_' . $view->name, $datatable_options, $vars);
+  drupal_alter('datatables_' . $view->name, $vars, $datatable_options);
 
   // Add DataTables and associated libraries.
   drupal_add_library('datatables', 'datatables');
@@ -506,105 +505,14 @@ function template_preprocess_datatables_view(&$vars) {
  * @param $datatable_options
  * @param $vars
  */
-function datatables_datatables_pre_view_alter(&$datatable_options, &$vars) {
+function datatables_datatables_pre_view_alter(&$vars, &$datatable_options) {
   // Is this DataTables 1.10? Then remap the settings.
   if (_datatables_is_new_version()) {
-
-    $view = $vars['view'];
-    $options  = $view->style_plugin->options;
-    #$handler  = $view->style_plugin;
-
-    #$fields   = &$view->field;
-    #$columns  = $handler->sanitize_columns($options['columns'], $fields);
-
     // Remap the settings for DataTables 1.10.
-    $datatable_options = _datatables_settings_1_10($datatable_options);
-
-    // Allow for new features, such as JSON caching.
-    if (isset($options['advanced'])) {
-      // JSON source and deferRender.
-      if (isset($options['advanced']['json_source_enabled']) && $options['advanced']['json_source_enabled'] == '1') {
-        // Set recordsTotal.
-        $datatable_options['recordsTotal'] = count($vars['rows']);
-        // Generate the JSON file.
-        $json_file = _datatables_defer_loading_json($vars['rows'], $view);
-        $url = file_create_url($json_file);
-        // Set the ajax url to json and dataSrc to flat.
-        $datatable_options['ajax'] = array(
-          'url' => $url,
-          'dataSrc' => 'data',
-          'cache' => TRUE,
-        );
-        // JSON source implies deferRender.
-        $datatable_options['deferRender'] = TRUE;
-        // Only print the rows for the default pagination.
-        $new_render_rows = array_slice($vars['rows'], 0, $options['pages']['display_length']);
-        $vars['rows'] = $new_render_rows;
-
-        // Set deferLoading as we've printed out some items already.
-        $display_length = (int) $options['pages']['display_length'];
-        // DeferLoading cannot work without JSON Source.
-        // @TODO In order for this to work, we either use Views processing (nah).
-        // @TODO Or we learn how to return from localstorage (better).
-        if (isset($options['advanced']['defer_loading_enabled']) && $options['advanced']['defer_loading_enabled'] == '1') {
-          /*
-           * I don't know what to set if we're overriding the whole ajax function!
-           * I know deferLoading merges DOM and JSON data. It also sends a
-           * request for each draw. A standard GET fails so you need to override
-           * sending request using ajax.data(). The trick is in ajaxSrc, the
-           * return data, however ajaxSrc doesn't apply filters or sort
-           * anything due to expected server processing.
-           * Disabled for now.
-           */
-          $datatable_options['serverSide'] = FALSE;
-
-          // Depending on serverSide config, deferLoading works differently.
-          if ($datatable_options['serverSide']) {
-            $datatable_options['deferLoading'] = $view->total_rows;
-          }
-          else {
-            $datatable_options['deferLoading'] = array(
-              $display_length,
-              (int) $view->total_rows
-            );
-          }
-          // Records filtered.
-          $datatable_options['recordsFiltered'] = $display_length;
-        }
-
-        // Bootstrap integration.
-        if (isset($options['advanced']['bootstrap']) && $options['advanced']['bootstrap'] == '1') {
-          drupal_add_library('datatables', 'datatables-bootstrap');
-          $datatable_options['bootstrap'] = TRUE;
-        }
-
-        // Responsive.
-        if (isset($options['responsive']['enabled'])) {
-          $responsive = $options['responsive'];
-          // Responsive.
-          if ($responsive['enabled'] == '1') {
-            // Configuration options can be found here:
-            // https://datatables.net/extensions/responsive/examples/display-control/classes.html
-            !empty($datatable_options['bootstrap'])
-              ? drupal_add_library('datatables', 'datatables-responsive-bootstrap')
-              : drupal_add_library('datatables', 'datatables-responsive');
-
-            // Enable Responsive.
-            $datatable_options['responsive'] = array(
-              'details' => FALSE,
-            );
-            // Still working this lot out.
-            $datatable_options['autoWidth'] = FALSE;
-            $vars['attributes_array']['style'] = 'width:100%;';
-            // We are required to add classes to the table.
-            $vars['classes_array'][] = 'table table-striped table-bordered dt-responsive nowrap';
-          }
-        }
-      }
-    }
+    $datatable_options = _datatables_settings_1_10($vars, $datatable_options);
   }
-
 }
+
 /**
  * JSON encodes the rendered rows for use as an MD5 filename.
  *   Static-ized for performance.
@@ -630,10 +538,11 @@ function _datatables_json_encode_rows($rows) {
  */
 function _datatables_defer_loading_json($rows, $view)  {
   $uri = FALSE;
-  // Apparently json_encode is faster than serialize(), and we are json'ing
-  // anyway so lets do that.
+  // Create a holder class for the JSON data.
   $data = new stdClass();
   $data->data = $rows;
+  // Apparently json_encode is faster than serialize(), and we are json'ing
+  // anyway so lets do that.
   $json = _datatables_json_encode_rows($data);
   $keys = array(
     $view->name,
@@ -656,14 +565,21 @@ function _datatables_defer_loading_json($rows, $view)  {
 /**
  * Remaps the Datatables 1.9 settings to 1.10.
  *
- * @param array $options
+ * @param array $vars
+ * @param array $datatable_options
  *    Old Datatable options for 1.9 to be remapped.
  * @return array $options
  *    New DataTable options for 1.10.
  */
-function _datatables_settings_1_10($options) {
+function _datatables_settings_1_10(&$vars, $datatable_options) {
   // Save original options for later.
-  $old_options = $options;
+  $old_options = $datatable_options;
+  $view = $vars['view'];
+  $style_options  = $view->style_plugin->options;
+  #$handler  = $view->style_plugin;
+  #$fields   = &$view->field;
+  #$columns  = $handler->sanitize_columns($options['columns'], $fields);
+
 
   $columns = array();
   foreach($old_options['aoColumns'] AS $index => $option) {
@@ -692,6 +608,16 @@ function _datatables_settings_1_10($options) {
     // Provide coluimn name for object index.
     $columns[$index]['name'] = $option['name'];
 
+    // Responsive.
+    if (isset($style_options['responsive']['breakpoints'])) {
+      $breakpoints = $style_options['responsive']['breakpoints'];
+      foreach ($columns as $index => $column) {
+        if ($breakpoints[$column['name']] != '0') {
+          $columns[$index]['className'] = $breakpoints[$column['name']];
+        }
+      }
+    }
+
     // Get the default sort order.
     if (isset($option['default_sort_order'])) {
       $columns[$index]['orderSequence'] = array($option['default_sort_order']);
@@ -699,7 +625,7 @@ function _datatables_settings_1_10($options) {
   }
 
   // New DataTable 1.10 settings.
-  $options = array(
+  $datatable_options = array(
     //'columnDefs' => $columns,
     'columns' => $columns,
     //'ordering' => $sortable, // methinks this is global.
@@ -722,15 +648,15 @@ function _datatables_settings_1_10($options) {
 
   // If bJQueryUI exists.
   if(isset($old_options['bJQueryUI'])) {
-    $options['jQueryUI'] = $old_options['bJQueryUI'];
+    $datatable_options['jQueryUI'] = $old_options['bJQueryUI'];
   }
   // Display length, might get changed later.
   if(isset($old_options['iDisplayLength']))  {
-    $options['pageLength'] = $old_options['iDisplayLength'];
+    $datatable_options['pageLength'] = $old_options['iDisplayLength'];
   }
   // Option lengthChange is set by default so supply some lengths.
   // @TODO Allow overrides in settings.
-  $options['lengthMenu'] = array(
+  $datatable_options['lengthMenu'] = array(
     array(
       10, 25, 50, 100, -1,
     ),
@@ -739,7 +665,91 @@ function _datatables_settings_1_10($options) {
     ),
   );
 
-  return $options;
+
+  // Allow for new features, such as JSON caching.
+  if (isset($style_options['advanced'])) {
+    // JSON source and deferRender.
+    if (isset($style_options['advanced']['json_source_enabled']) && $style_options['advanced']['json_source_enabled'] == '1') {
+      // Set recordsTotal.
+      $datatable_options['recordsTotal'] = count($vars['rows']);
+      // Generate the JSON file.
+      $json_file = _datatables_defer_loading_json($vars['rows'], $view);
+      $url = file_create_url($json_file);
+      // Set the ajax url to json and dataSrc to flat.
+      $datatable_options['ajax'] = array(
+        'url' => $url,
+        'dataSrc' => 'data',
+        'cache' => TRUE,
+      );
+      // JSON source implies deferRender.
+      $datatable_options['deferRender'] = TRUE;
+      // Only print the rows for the default pagination.
+      $new_render_rows = array_slice($vars['rows'], 0, $style_options['pages']['display_length']);
+      $vars['rows'] = $new_render_rows;
+
+      // Set deferLoading as we've printed out some items already.
+      $display_length = (int) $style_options['pages']['display_length'];
+      // DeferLoading cannot work without JSON Source.
+      // @TODO In order for this to work, we either use Views processing (nah).
+      // @TODO Or we learn how to return from localstorage (better).
+      if (isset($style_options['advanced']['defer_loading_enabled']) && $style_options['advanced']['defer_loading_enabled'] == '1') {
+        /*
+         * I don't know what to set if we're overriding the whole ajax function!
+         * I know deferLoading merges DOM and JSON data. It also sends a
+         * request for each draw. A standard GET fails so you need to override
+         * sending request using ajax.data(). The trick is in ajaxSrc, the
+         * return data, however ajaxSrc doesn't apply filters or sort
+         * anything due to expected server processing.
+         * Disabled for now.
+         */
+        $datatable_options['serverSide'] = FALSE;
+
+        // Depending on serverSide config, deferLoading works differently.
+        if ($datatable_options['serverSide']) {
+          $datatable_options['deferLoading'] = $view->total_rows;
+        }
+        else {
+          $datatable_options['deferLoading'] = array(
+            $display_length,
+            (int) $view->total_rows
+          );
+        }
+        // Records filtered.
+        $datatable_options['recordsFiltered'] = $display_length;
+      }
+
+      // Bootstrap integration.
+      if (isset($style_options['advanced']['bootstrap']) && $style_options['advanced']['bootstrap'] == '1') {
+        drupal_add_library('datatables', 'datatables-bootstrap');
+        $datatable_options['bootstrap'] = TRUE;
+      }
+
+      // Responsive.
+      if (isset($style_options['responsive']['enabled'])) {
+        $responsive = $style_options['responsive'];
+        // Responsive.
+        if ($responsive['enabled'] == '1') {
+          // Configuration options can be found here:
+          // https://datatables.net/extensions/responsive/examples/display-control/classes.html
+          !empty($datatable_options['bootstrap'])
+            ? drupal_add_library('datatables', 'datatables-responsive-bootstrap')
+            : drupal_add_library('datatables', 'datatables-responsive');
+
+          // Enable Responsive.
+          $datatable_options['responsive'] = array(
+            'details' => FALSE,
+          );
+          // Still working this lot out.
+          $datatable_options['autoWidth'] = FALSE;
+          $vars['attributes_array']['style'] = 'width:100%;';
+          // We are required to add classes to the table.
+          $vars['classes_array'][] = 'table table-striped table-bordered dt-responsive nowrap';
+        }
+      }
+    }
+  }
+
+  return $datatable_options;
 }
 
 /**

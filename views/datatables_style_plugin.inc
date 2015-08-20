@@ -256,6 +256,42 @@ class datatables_style_plugin extends views_plugin_style_table {
         '#title' => t('Responsive Extension Integration'),
         '#default_value' => isset($this->options['responsive']['enabled']) ? $this->options['responsive']['enabled'] : 0,
       );
+      // Responsive options per field.
+      $form['responsive']['breakpoints'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Breakpoints per Field'),
+        '#description' => 'Here you can set classes on each column, which can control visibility for a specific breakpoint.<br>'
+          . 'You can apply any variation of the following classes:<br>'
+          . "<dl>
+          <dt>none</dt>
+           <dd>Hides column but shows in child row.</dd>
+          <dt>never</dt>
+            <dd>Hides the column and never shows it.</dd>
+          <dt>all</dt>
+           <dd>Always show the column.</dd>
+          <dt>mobile-p</dt>
+           <dd>Show in Mobile Portrait.</dd>
+          <dt>mobile-l</dt>
+            <dd>Show in Mobile Landscape.</dd>
+          <dt>tablet-p</dt>
+            <dd>Show in Tablet Portrait.</dd>
+          <dt>tablet-l</dt>
+            <dd>Show in Tablet Landscape.</dd>
+          <dt>desktop</dt>
+            <dd>Show in Desktop</dd>
+          </dl><br>"
+          . '<strong>For more information on the viewport sizes and options, see http://datatables.net/extensions/responsive/classes</strong>',
+        '#collapsible' => TRUE,
+        '#collapsed' => FALSE,
+      );
+      foreach ($columns as $column_name => $column_label) {
+        $form['responsive']['breakpoints'][$column_name] = array(
+          '#type' => 'textfield',
+          '#title' => check_plain($column_label),
+          '#default_value' => isset($this->options['responsive']['breakpoints'][$column_name]) ? $this->options['responsive']['breakpoints'][$column_name] : '',
+          '#size' => 60,
+        );
+      }
     }
 
   }
