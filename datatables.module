@@ -502,9 +502,6 @@ function template_preprocess_datatables_view(&$vars) {
   // the alter key becomes datatables_VIEWNAME_alter().
   drupal_alter('datatables_' . $view->name, $datatable_options, $vars);
 
-  dpm($datatable_options, 'FINAL $datatable_options');
-  //dpm(drupal_json_encode($datatable_options), 'FINAL');
-
   // Add DataTables and associated libraries.
   drupal_add_library('datatables', 'datatables');
   // Add our settings for our DataTable initialization JS to pick up.
@@ -609,7 +606,6 @@ function datatables_datatables_pre_view_alter(&$datatable_options, &$vars) {
             );
             // Still working this lot out.
             $datatable_options['autoWidth'] = FALSE;
-            // dpm($vars, 'vars');
             $vars['attributes_array']['style'] = 'width:100%;';
             // We are required to add classes to the table.
             $vars['classes_array'][] = 'table table-striped table-bordered dt-responsive nowrap';
@@ -678,7 +674,6 @@ function _datatables_defer_loading_json($rows, $view)  {
  */
 function _datatables_settings_1_10($options) {
   // Save original options for later.
-  //dpm($options, 'OLD');
   $old_options = $options;
 
   $columns = array();
