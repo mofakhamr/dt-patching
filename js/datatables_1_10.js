@@ -8,21 +8,24 @@
 
           // From advanced style plugin settings.
           if(drupal_settings.ajax) {
-            /**
-             * Slice the JSON result as we've already got that data sourced by
-             * DOM.
-             *
-             * @param json
-             * @returns {*}
-             */
-            drupal_settings.ajax.dataSrc = function ( json ) {
-              // Removing the .views-row within drupal_settings.drawCallback()
-              // means we're missing rows. Better to remove them from the JSON.
-              if (drupal_settings.pageLength) {
-                //json.data = json.data.slice(drupal_settings.pageLength, drupal_settings.recordsTotal);
-              }
-              return json.data;
-            };
+
+            if (drupal_settings.deferLoading) {
+              /**
+               * Slice the JSON result as we've already got that data sourced by
+               * DOM.
+               *
+               * @param json
+               * @returns {*}
+               */
+              drupal_settings.ajax.dataSrc = function ( json ) {
+                // Removing the .views-row within drupal_settings.drawCallback()
+                // means we're missing rows. Better to remove them from the JSON.
+                if (drupal_settings.pageLength) {
+                  json.data = json.data.slice(drupal_settings.pageLength, drupal_settings.recordsTotal);
+                }
+                return json.data;
+              };
+            }
 
             // Option deferRender is very complicated without serverSide
             // processing. @todo maybe later.
@@ -81,57 +84,43 @@
 
           }
 
-          // Initialize DataTables 1.10+.
-          datatable = $(selector).DataTable(drupal_settings);
-
-          /**
-           * As we're mixing JSON and DOM sources without real serverSide,
-           * the initial items will be duplicated, simply remove here.
-           */
-          datatable.on( 'xhr', function () {
-            $('tbody tr.views-row').remove();
-          });
-
-          //console.log(drupal_settings);
-          if (drupal_settings.buttons) {
-            drupal_settings.buttons = ['csv', 'pdf', 'copy'];
-            new $.fn.dataTable.Buttons( datatable, {
-              buttons: [
-                'copy', 'excel', 'pdf'
-              ]
-            } );
-            //console.log('You said Buttons.. Now show me.. buttons!??');
-            //console.log(datatable.table().container());
-            datatable.buttons().container()
-              //.appendTo( $('.col-sm-6:eq(0)', datatable.table().container() ) );
-              .appendTo( $('#datatable-1_wrapper', datatable.table().container() ) );
-          }
-
-
           // Check if table should contain expandable hidden row feature.
+          // @TODO Conflicts with responsive.
           if (drupal_settings.expandable) {
-            $(selector + ' tbody tr td:first-child:not(.details-control)').addClass('details-control').on('click', function() {
-              var datatable = $(selector).DataTable();
-              var tr = $(this).closest('tr');
-              var row = datatable.row( tr );
-              // isShown() - thanks Datatables 1.10!
-              if ( row.child.isShown() ) {
-                // This row is already open - close it.
-                row.child.hide();
-                tr.removeClass('shown');
-              }
-              else {
-                // Open this row, theme the previous way.
-                var showValue = Drupal.theme('datatablesExpandableRow', settings, row.data());
-                row.child( showValue ).show();
-                tr.addClass('shown');
-              }
-            });
+            // Regardless of what's being drawn set first column as Toggle.
+            drupal_settings.rowCallback = function( row, data, index ) {
+              $('td:eq(0)', row).addClass('details-control').on('click', function() {
+                var selector = $(this).closest('table').attr('id');
+                datatable = $("#" + selector).DataTable();
+                settings = datatable.init();
+                var tr = $(this).closest('tr');
+                var row = datatable.row( tr );
+
+                if ( row.child.isShown() ) {
+                  // This row is already open - close it
+                  row.child.hide();
+                  tr.removeClass('shown');
+                }
+                else {
+                  // Open this row
+                  var showValue = Drupal.theme('datatablesExpandableRow', settings, row.data());
+                  console.log(showValue);
+                  console.log(row);
+
+                  row.child( showValue ).show();
+                  tr.addClass('shown');
+                }
+              });
+
+            };
+
           }
-/*
-          $(selector + ' tbody').on('click', 'td.details-control', function () {
-          });
-*/
+
+          // Initialize DataTables 1.10+ if not disabled.
+          if(!drupal_settings.do_not_init) {
+            datatable = $(selector).DataTable(drupal_settings);
+          }
+
         });
       });
     }
@@ -148,16 +137,21 @@
   *   The formatted text (html).
   */
   Drupal.theme.prototype.datatablesExpandableRow = function(settings, rowData) {
-
     var output = '<table style="padding-left: 50px">';
-    $.each(rowData, function(index, value) {
-      if (!settings.columns[index].visible) {
-        //console.log(value);
-        output += '<tr><td style="text-align: left">' + value + '</td></tr>';
+    // Iterate aoColumnHeaders as this contains all labels.
+    $.each(settings.aoColumnHeaders, function(index, label) {
+      // If expandable, show column.
+      if (settings.columns[index].bExpandable) {
+        var value = rowData[settings.columns[index]['data']];
+        console.log(value);
+        /// Add row: label = value.
+        output += '<tr>' +
+          '<td style="text-align: left">' + label + '</td>' +
+          '<td style="text-align: left">' + value + '</td>' +
+          '</tr>';
       }
     });
     output += '</table>';
-
     return output;
   };
 })(jQuery);

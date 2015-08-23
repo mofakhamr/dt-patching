@@ -7,7 +7,6 @@
 // Define the regex mask for finding datatables core file.
 define('DATATABLES_CORE_MASK', '/(jquery.|^)(dataTables)(.min|).js$/i');
 // Define the regex for extensions, will need to array_diff with CORE MASK.
-// ^.*(?<!jquery.)(dataTables).*?(.min|).js$ (excludes jquery)
 define('DATATABLES_EXT_MASK', '/^.*(dataTables).*?(.min|).js$/i');
 
 /**
@@ -326,6 +325,8 @@ function theme_datatable($variables) {
 
 /**
  * Display a view as a DataTable style.
+ *
+ * @param $vars
  */
 function template_preprocess_datatables_view(&$vars) {
   // Run views table preprocess function to handle putting rows in columns,
@@ -337,13 +338,11 @@ function template_preprocess_datatables_view(&$vars) {
     return;
   }
 
-  $view     = $vars['view'];
-
+  $view           = $vars['view'];
   $style_options  = $view->style_plugin->options;
-  $handler  = $view->style_plugin;
-
-  $fields   = &$view->field;
-  $columns  = $handler->sanitize_columns($style_options['columns'], $fields);
+  $handler        = $view->style_plugin;
+  $fields         = &$view->field;
+  $columns        = $handler->sanitize_columns($style_options['columns'], $fields);
 
   $position = 0;
   foreach ($columns as $field => $column) {
@@ -358,6 +357,7 @@ function template_preprocess_datatables_view(&$vars) {
       switch ($style_options['hidden_columns'][$field]) {
         case 'expandable':
           $datatable_options['bExpandable'] = TRUE;
+          $column_options['bExpandable'] = TRUE;
         // ... and fall through, since expandable columns are also hidden.
         case 'hidden':
           // Hidden or expandable columns get the bVisible init option set to
@@ -483,16 +483,20 @@ function template_preprocess_datatables_view(&$vars) {
 
   $vars['id'] = _datatables_get_id();
   $vars['classes_array'][] = 'display';
+
   // Allow other modules to adjust the settings via drupal_alter().
-  drupal_alter('datatables_pre_view', $vars, $datatable_options);
+  $vars['datatable_options'] = $datatable_options;
+  drupal_alter('datatables_pre_view', $vars);
 
   // In order to allow multiple hook ins, we use the view name as the key, so
   // the alter key becomes datatables_VIEWNAME_alter().
-  drupal_alter('datatables_' . $view->name, $vars, $datatable_options);
+  drupal_alter('datatables_' . $view->name, $vars);
 
   // Add DataTables and associated libraries.
   drupal_add_library('datatables', 'datatables');
   // Add our settings for our DataTable initialization JS to pick up.
+  $datatable_options = $vars['datatable_options'];
+
   drupal_add_js(array('datatables' => array('#' . $vars['id'] => $datatable_options)), array('type' => 'setting', 'scope' => JS_DEFAULT));
 }
 
@@ -505,11 +509,11 @@ function template_preprocess_datatables_view(&$vars) {
  * @param $datatable_options
  * @param $vars
  */
-function datatables_datatables_pre_view_alter(&$vars, &$datatable_options) {
+function datatables_datatables_pre_view_alter(&$vars) {
   // Is this DataTables 1.10? Then remap the settings.
   if (_datatables_is_new_version()) {
     // Remap the settings for DataTables 1.10.
-    $datatable_options = _datatables_settings_1_10($vars, $datatable_options);
+    $vars['datatable_options'] = _datatables_settings_1_10($vars);
   }
 }
 
@@ -571,9 +575,9 @@ function _datatables_defer_loading_json($rows, $view)  {
  * @return array $options
  *    New DataTable options for 1.10.
  */
-function _datatables_settings_1_10(&$vars, $datatable_options) {
+function _datatables_settings_1_10(&$vars) {
   // Save original options for later.
-  $old_options = $datatable_options;
+  $old_options = &$vars['datatable_options'];
   $view = $vars['view'];
   $style_options  = $view->style_plugin->options;
   #$handler  = $view->style_plugin;
@@ -583,10 +587,17 @@ function _datatables_settings_1_10(&$vars, $datatable_options) {
 
   $columns = array();
   foreach($old_options['aoColumns'] AS $index => $option) {
-    $columns[$index]['targets'] = 'views-field-' . $option['name']; //$index
+
+    $columns[$index]['targets'] = 'views-field-' . $option['name'];
     $columns[$index]['data'] = $option['name'];
     $columns[$index]['visible'] = isset($option['bVisible']) ? FALSE : TRUE;
-    if (isset($option['bSortable'])) {
+
+    if (isset($option['bExpandable'])) {
+      $columns[$index]['bExpandable'] = $option['bExpandable'];
+    }
+
+
+    if (isset($option['bSortable']) && $option['bSortable'] == TRUE) {
       $columns[$index]['orderable'] = TRUE;
       // If sortable, add type
       // Get the column type if it exists.
@@ -604,6 +615,10 @@ function _datatables_settings_1_10(&$vars, $datatable_options) {
         }
       }
     }
+    else {
+      $columns[$index]['orderable'] = FALSE;
+    }
+
 
     // Provide coluimn name for object index.
     $columns[$index]['name'] = $option['name'];
@@ -611,24 +626,25 @@ function _datatables_settings_1_10(&$vars, $datatable_options) {
     // Responsive.
     if (isset($style_options['responsive']['breakpoints'])) {
       $breakpoints = $style_options['responsive']['breakpoints'];
-      foreach ($columns as $index => $column) {
+      foreach ($columns as $i => $column) {
         if ($breakpoints[$column['name']] != '0') {
-          $columns[$index]['className'] = $breakpoints[$column['name']];
+          $columns[$i]['className'] = $breakpoints[$column['name']];
         }
       }
     }
 
     // Get the default sort order.
     if (isset($option['default_sort_order'])) {
-      $columns[$index]['orderSequence'] = array($option['default_sort_order']);
+      // Doesn't allow desc sorting then.
+      // $columns[$index]['orderSequence'] = array($option['default_sort_order']);
     }
+    // End of column iteration.
   }
 
   // New DataTable 1.10 settings.
   $datatable_options = array(
-    //'columnDefs' => $columns,
+    'aoColumnHeaders' => $old_options['aoColumnHeaders'],
     'columns' => $columns,
-    //'ordering' => $sortable, // methinks this is global.
     'expandable' => isset($old_options['bExpandable']) ? $old_options['bExpandable'] : FALSE,
     'info' => isset($old_options['bInfo']) ? $old_options['bInfo'] : FALSE,
     'searching' => isset($old_options['bFilter']) ? $old_options['bFilter'] : FALSE,
@@ -655,19 +671,25 @@ function _datatables_settings_1_10(&$vars, $datatable_options) {
     $datatable_options['pageLength'] = $old_options['iDisplayLength'];
   }
   // Option lengthChange is set by default so supply some lengths.
-  // @TODO Allow overrides in settings.
-  $datatable_options['lengthMenu'] = array(
-    array(
-      10, 25, 50, 100, -1,
-    ),
-    array(
-      10, 25, 50, 100, "All",
-    ),
-  );
+  if ($old_options['bLengthChange']) {
+    $datatable_options['lengthMenu'] = array(
+      array(
+        10, 25, 50, 100, -1,
+      ),
+      array(
+        10, 25, 50, 100, "All",
+      ),
+    );
+  }
 
+  // Default Sort order.
+  if (isset($old_options['aaSorting'])) {
+    $datatable_options['order'] = $old_options['aaSorting'];
+  }
 
   // Allow for new features, such as JSON caching.
   if (isset($style_options['advanced'])) {
+
     // JSON source and deferRender.
     if (isset($style_options['advanced']['json_source_enabled']) && $style_options['advanced']['json_source_enabled'] == '1') {
       // Set recordsTotal.
@@ -683,12 +705,23 @@ function _datatables_settings_1_10(&$vars, $datatable_options) {
       );
       // JSON source implies deferRender.
       $datatable_options['deferRender'] = TRUE;
+
+      // DeferLoading can be used but it does mess things up.
+      /*$datatable_options['deferLoading'] = array(
+        $display_length,
+        (int) $datatable_options['recordsTotal'],
+      );*/
+
       // Only print the rows for the default pagination.
-      $new_render_rows = array_slice($vars['rows'], 0, $style_options['pages']['display_length']);
+      //$new_render_rows = array_slice($vars['rows'], 0, $style_options['pages']['display_length']);
+      // Actually I think there's no point.. they just get replaced.
+      $new_render_rows = array_slice($vars['rows'], 0, 1);
       $vars['rows'] = $new_render_rows;
 
       // Set deferLoading as we've printed out some items already.
+      // ServerSide only!
       $display_length = (int) $style_options['pages']['display_length'];
+
       // DeferLoading cannot work without JSON Source.
       // @TODO In order for this to work, we either use Views processing (nah).
       // @TODO Or we learn how to return from localstorage (better).
@@ -718,8 +751,14 @@ function _datatables_settings_1_10(&$vars, $datatable_options) {
         $datatable_options['recordsFiltered'] = $display_length;
       }
 
+      // Allow for intialization override.
+      if (isset($style_options['advanced']['do_not_init']) && $style_options['advanced']['do_not_init']) {
+        $datatable_options['do_not_init'] = TRUE;
+      }
+
       // Bootstrap integration.
       if (isset($style_options['advanced']['bootstrap']) && $style_options['advanced']['bootstrap'] == '1') {
+        $vars['classes_array'][] = 'table table-striped table-bordered';
         drupal_add_library('datatables', 'datatables-bootstrap');
         $datatable_options['bootstrap'] = TRUE;
       }
@@ -743,7 +782,7 @@ function _datatables_settings_1_10(&$vars, $datatable_options) {
           $datatable_options['autoWidth'] = FALSE;
           $vars['attributes_array']['style'] = 'width:100%;';
           // We are required to add classes to the table.
-          $vars['classes_array'][] = 'table table-striped table-bordered dt-responsive nowrap';
+          $vars['classes_array'][] = 'dt-responsive nowrap';
         }
       }
     }

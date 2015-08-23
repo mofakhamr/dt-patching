@@ -208,6 +208,16 @@ class datatables_style_plugin extends views_plugin_style_table {
         '#collapsible' => TRUE,
         '#collapsed' => TRUE,
       );
+      // Whether to initialize the plugin, allows for custom JS.
+      $form['advanced']['do_not_init'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Disable Initialization?'),
+        '#description' => t('You can choose for this module to NOT intialize '
+          . 'datatables, meaning you must initialize it yourself!<br>'
+          . 'The benefit of doing this is to allow you to attach custom JS to '
+          . 'the intialization array. (Developer use only)'),
+        '#default_value' => isset($this->options['advanced']['do_not_init']) ? $this->options['advanced']['do_not_init'] : 0,
+      );
       // Ajax sourced rather than DOM sourced.
       $form['advanced']['json_source_enabled'] = array(
         '#type' => 'checkbox',
