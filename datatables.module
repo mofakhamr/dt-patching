@@ -750,42 +750,45 @@ function _datatables_settings_1_10(&$vars) {
         // Records filtered.
         $datatable_options['recordsFiltered'] = $display_length;
       }
+    }
+    // End of Advanced Data Sources - JSON source and deferRender.
 
-      // Allow for intialization override.
-      if (isset($style_options['advanced']['do_not_init']) && $style_options['advanced']['do_not_init']) {
-        $datatable_options['do_not_init'] = TRUE;
-      }
+    // Allow for intialization override.
+    if (isset($style_options['advanced']['do_not_init']) && $style_options['advanced']['do_not_init']) {
+      $datatable_options['do_not_init'] = TRUE;
+    }
 
-      // Bootstrap integration.
-      if (isset($style_options['advanced']['bootstrap']) && $style_options['advanced']['bootstrap'] == '1') {
-        $vars['classes_array'][] = 'table table-striped table-bordered';
-        drupal_add_library('datatables', 'datatables-bootstrap');
-        $datatable_options['bootstrap'] = TRUE;
-      }
+    // Bootstrap integration.
+    if (isset($style_options['advanced']['bootstrap']) && $style_options['advanced']['bootstrap'] == '1') {
+      $vars['classes_array'][] = 'table table-striped table-bordered';
+      drupal_add_library('datatables', 'datatables-bootstrap');
+      $datatable_options['bootstrap'] = TRUE;
+    }
 
+    // Responsive.
+    if (isset($style_options['responsive']['enabled'])) {
+      $responsive = $style_options['responsive'];
       // Responsive.
-      if (isset($style_options['responsive']['enabled'])) {
-        $responsive = $style_options['responsive'];
-        // Responsive.
-        if ($responsive['enabled'] == '1') {
-          // Configuration options can be found here:
-          // https://datatables.net/extensions/responsive/examples/display-control/classes.html
-          !empty($datatable_options['bootstrap'])
-            ? drupal_add_library('datatables', 'datatables-responsive-bootstrap')
-            : drupal_add_library('datatables', 'datatables-responsive');
+      if ($responsive['enabled'] == '1') {
+        // Configuration options can be found here:
+        // https://datatables.net/extensions/responsive/examples/display-control/classes.html
+        !empty($datatable_options['bootstrap'])
+          ? drupal_add_library('datatables', 'datatables-responsive-bootstrap')
+          : drupal_add_library('datatables', 'datatables-responsive');
 
-          // Enable Responsive.
-          $datatable_options['responsive'] = array(
-            'details' => FALSE,
-          );
-          // Still working this lot out.
-          $datatable_options['autoWidth'] = FALSE;
-          $vars['attributes_array']['style'] = 'width:100%;';
-          // We are required to add classes to the table.
-          $vars['classes_array'][] = 'dt-responsive nowrap';
-        }
+        // Enable Responsive.
+        $datatable_options['responsive'] = array(
+          'details' => FALSE,
+        );
+        // Still working this lot out.
+        $datatable_options['autoWidth'] = FALSE;
+        $vars['attributes_array']['style'] = 'width:100%;';
+        // We are required to add classes to the table.
+        $vars['classes_array'][] = 'dt-responsive nowrap';
       }
     }
+
+
   }
 
   return $datatable_options;
