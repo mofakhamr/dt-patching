@@ -561,7 +561,7 @@ function _datatables_defer_loading_json($rows, $view)  {
   $dir = 'public://datatables_json';
   if (file_prepare_directory($dir, FILE_CREATE_DIRECTORY)) {
     $uri = $dir . '/' . $filename;
-    file_save_data($json, $uri);
+    file_save_data($json, $uri, FILE_EXISTS_REPLACE);
   }
   return $uri;
 }
